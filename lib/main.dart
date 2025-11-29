@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'login/login_page.dart';
 import 'messages.dart';
 
 void main() {
@@ -12,10 +13,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetMaterialApp(
-      translations: Messages(), // Add your translation here
-      locale: const Locale('en', 'US'), // Translations will be displayed in that locale
-      fallbackLocale: const Locale('en', 'US'), // Specify the fallback locale in case an invalid locale is selected.
-      title: 'Flutter Demo',
+      translations: Messages(),
+      locale: const Locale('en', 'US'),
+      fallbackLocale: const Locale('en', 'US'),
+      title: 'Sensodis',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF1E1E1E),
@@ -26,71 +27,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.white,
         useMaterial3: true,
       ),
-      home: MyHomePage(),
-    );
-  }
-}
-
-class CounterController extends GetxController {
-  var count = 0.obs;
-
-  void increment() {
-    count++;
-  }
-
-  void changeLanguage(String lang, String country) {
-    var locale = Locale(lang, country);
-    Get.updateLocale(locale);
-  }
-}
-
-class MyHomePage extends StatelessWidget {
-  final CounterController c = Get.put(CounterController());
-
-  MyHomePage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        // Use the primary color from the theme
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        // Use onPrimary for text/icons to ensure contrast
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        title: Text('title'.tr),
-        actions: [
-          IconButton(
-            onPressed: () {
-              if (Get.locale?.languageCode == 'en') {
-                c.changeLanguage('de', 'DE');
-              } else {
-                c.changeLanguage('en', 'US');
-              }
-            },
-            icon: const Icon(Icons.language),
-            tooltip: 'change_lang'.tr,
-          ),
-        ],
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text('message'.tr),
-            Obx(() => Text(
-                  '${c.count}',
-                  style: Theme.of(context).textTheme.headlineMedium,
-                )),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: c.increment,
-        tooltip: 'increment'.tr,
-        // Use the secondary color from the theme
-        backgroundColor: Theme.of(context).colorScheme.secondary,
-        child: const Icon(Icons.add),
-      ),
+      home: LoginPage(),
     );
   }
 }

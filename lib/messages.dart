@@ -5,17 +5,25 @@ class Messages extends Translations {
   Map<String, Map<String, String>> get keys => {
         'en_US': {
           'hello': 'Hello World',
-          'title': 'Flutter Demo Home Page',
+          'title': 'Sensodis',
           'message': 'You have pushed the button this many times:',
           'increment': 'Increment',
-          'change_lang': 'Change Language'
+          'change_lang': 'Change Language',
+          'username': 'Username',
+          'password': 'Password',
+          'login': 'Login',
+          'welcome': 'Welcome to Sensodis',
         },
         'de_DE': {
           'hello': 'Hallo Welt',
-          'title': 'Flutter Demo Startseite',
+          'title': 'Sensodis',
           'message': 'Du hast den Knopf so oft gedrückt:',
           'increment': 'Erhöhen',
-          'change_lang': 'Sprache ändern'
+          'change_lang': 'Sprache ändern',
+          'username': 'Benutzername',
+          'password': 'Passwort',
+          'login': 'Anmelden',
+          'welcome': 'Willkommen bei Sensodis',
         }
       };
 }
