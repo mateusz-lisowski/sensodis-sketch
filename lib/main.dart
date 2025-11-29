@@ -17,7 +17,13 @@ class MyApp extends StatelessWidget {
       fallbackLocale: const Locale('en', 'US'), // Specify the fallback locale in case an invalid locale is selected.
       title: 'Flutter Demo',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF1E1E1E),
+          primary: const Color(0xFF1E1E1E),
+          secondary: Colors.red,
+          surface: Colors.white,
+        ),
+        scaffoldBackgroundColor: Colors.white,
         useMaterial3: true,
       ),
       home: MyHomePage(),
@@ -47,7 +53,10 @@ class MyHomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        // Use the primary color from the theme
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        // Use onPrimary for text/icons to ensure contrast
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
         title: Text('title'.tr),
         actions: [
           IconButton(
@@ -78,6 +87,8 @@ class MyHomePage extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: c.increment,
         tooltip: 'increment'.tr,
+        // Use the secondary color from the theme
+        backgroundColor: Theme.of(context).colorScheme.secondary,
         child: const Icon(Icons.add),
       ),
     );
