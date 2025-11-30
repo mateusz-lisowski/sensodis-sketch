@@ -15,7 +15,7 @@ class AppBarIcon extends StatelessWidget {
           shape: BoxShape.circle,
         ),
         child: Padding(
-          padding: const EdgeInsets.all(4.0),
+          padding: const EdgeInsets.all(8.0),
           child: Image.asset(
             'assets/images/sensodis-icon.png',
             fit: BoxFit.contain,
