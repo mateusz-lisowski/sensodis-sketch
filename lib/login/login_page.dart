@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:sensodis_sketch/widgets/app_bar_icon.dart';
 import 'login_controller.dart';
 
 class LoginPage extends StatelessWidget {
@@ -13,22 +14,7 @@ class LoginPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
-        leading: Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Container(
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(4.0),
-              child: Image.asset(
-                'assets/images/sensodis-icon.png',
-                fit: BoxFit.contain,
-              ),
-            ),
-          ),
-        ),
+        leading: AppBarIcon(),
         actions: [
           IconButton(
             onPressed: () {
