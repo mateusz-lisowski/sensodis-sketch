@@ -1,0 +1,132 @@
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:intl/intl.dart';
+import 'package:sensodis_sketch/widgets/app_bar_icon.dart';
+import 'dashboard_controller.dart';
+
+class DashboardPage extends StatelessWidget {
+  final DashboardController c = Get.put(DashboardController());
+
+  DashboardPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        leading: AppBarIcon(),
+        title: Center(
+          child: Text(
+            'dashboard'.tr,
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: c.refreshSensors,
+          ),
+        ],
+      ),
+      body: Obx(
+        () => ListView.builder(
+          itemCount: c.sensors.length,
+          itemBuilder: (context, index) {
+            final sensor = c.sensors[index];
+            return Card(
+              margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: _getTemperatureColor(sensor.temperature),
+                  foregroundColor: Colors.white,
+                  child: const Icon(Icons.thermostat),
+                ),
+                title: Text(
+                  sensor.name,
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 4),
+                    Wrap(
+                      spacing: 16,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.thermostat,
+                              size: 16,
+                              color: Colors.grey[600],
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '${'temperature'.tr}: ${sensor.temperature}°C',
+                            ),
+                          ],
+                        ),
+                        if (sensor.humidity != null)
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.water_drop,
+                                size: 16,
+                                color: Colors.grey[600],
+                              ),
+                              const SizedBox(width: 4),
+                              Text('${'humidity'.tr}: ${sensor.humidity}%'),
+                            ],
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.battery_std,
+                          size: 16,
+                          color: _getBatteryColor(sensor.batteryLevel),
+                        ),
+                        const SizedBox(width: 4),
+                        Text('${'battery'.tr}: ${sensor.batteryLevel}%'),
+                        const Spacer(),
+                        Text(
+                          DateFormat('HH:mm:ss').format(sensor.lastUpdated),
+                          style: TextStyle(
+                            color: Colors.grey[500],
+                            fontSize: 12,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                onTap: () {
+                  // Navigate to sensor details if needed
+                },
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Color _getTemperatureColor(double temp) {
+    if (temp < 0) return Colors.blue;
+    if (temp > 25) return Colors.orange;
+    if (temp > 30) return Colors.red;
+    return Colors.green;
+  }
+
+  Color _getBatteryColor(int level) {
+    if (level < 20) return Colors.red;
+    if (level < 50) return Colors.orange;
+    return Colors.green;
+  }
+}
