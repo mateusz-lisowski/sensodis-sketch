@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import '../dashboard/dashboard_page.dart';
 
 class LoginController extends GetxController {
   final usernameController = TextEditingController();
@@ -7,7 +8,8 @@ class LoginController extends GetxController {
 
   void login() {
     // Implement login logic here
-    Get.snackbar('Login', 'Login functionality not implemented yet');
+    // For now, we simulate a successful login and navigate to the dashboard
+    Get.offAll(() => DashboardPage());
   }
 
   void changeLanguage(String lang, String country) {

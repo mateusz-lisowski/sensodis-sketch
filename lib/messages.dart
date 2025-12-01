@@ -13,6 +13,16 @@ class Messages extends Translations {
           'password': 'Password',
           'login': 'Login',
           'welcome': 'Welcome to Sensodis',
+          'dashboard': 'Dashboard',
+          'temperature': 'Temperature',
+          'humidity': 'Humidity',
+          'battery': 'Battery',
+          'scan_devices': 'Scan for Devices',
+          'no_devices': 'No devices found',
+          'add': 'Add',
+          'device_added': 'Device added to dashboard',
+          'scanning': 'Scanning...',
+          'unknown_device': 'Unknown Device',
         },
         'de_DE': {
           'hello': 'Hallo Welt',
@@ -24,6 +34,16 @@ class Messages extends Translations {
           'password': 'Passwort',
           'login': 'Anmelden',
           'welcome': 'Willkommen bei Sensodis',
+          'dashboard': 'Übersicht',
+          'temperature': 'Temperatur',
+          'humidity': 'Feuchtigkeit',
+          'battery': 'Batterie',
+          'scan_devices': 'Nach Geräten suchen',
+          'no_devices': 'Keine Geräte gefunden',
+          'add': 'Hinzufügen',
+          'device_added': 'Gerät zur Übersicht hinzugefügt',
+          'scanning': 'Suche...',
+          'unknown_device': 'Unbekanntes Gerät',
         }
       };
 }
