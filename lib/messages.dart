@@ -23,6 +23,7 @@ class Messages extends Translations {
           'device_added': 'Device added to dashboard',
           'scanning': 'Scanning...',
           'unknown_device': 'Unknown Device',
+          'settings': 'Settings',
         },
         'pl_PL': {
           'hello': 'Witaj Świecie',
@@ -44,6 +45,7 @@ class Messages extends Translations {
           'device_added': 'Urządzenie dodane do panelu',
           'scanning': 'Skanowanie...',
           'unknown_device': 'Nieznane urządzenie',
+          'settings': 'Ustawienia',
         }
       };
 }

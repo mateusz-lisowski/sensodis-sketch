@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import '../widgets/app_bar_icon.dart';
+import '../settings/settings_page.dart';
 import 'dashboard_controller.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -15,11 +15,9 @@ class DashboardPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: AppBarIcon(),
-        title: Center(
-          child: Text(
-            'dashboard'.tr,
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
+        title: Text(
+          'dashboard'.tr,
+          style: TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
@@ -27,6 +25,10 @@ class DashboardPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: c.refreshSensors,
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () => Get.to(() => const SettingsPage()),
           ),
         ],
       ),
