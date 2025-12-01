@@ -19,7 +19,7 @@ class LoginPage extends StatelessWidget {
           IconButton(
             onPressed: () {
               if (Get.locale?.languageCode == 'en') {
-                c.changeLanguage('de', 'DE');
+                c.changeLanguage('pl', 'PL');
               } else {
                 c.changeLanguage('en', 'US');
               }
