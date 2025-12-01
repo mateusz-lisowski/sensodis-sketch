@@ -12,8 +12,42 @@ class SettingsPage extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
       ),
-      body: Center(
-        child: Text('settings'.tr),
+      body: ListView(
+        children: [
+          ListTile(
+            leading: const Icon(Icons.language),
+            title: Text('change_lang'.tr),
+            trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+            onTap: () => _showLanguageDialog(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showLanguageDialog(BuildContext context) {
+    Get.dialog(
+      AlertDialog(
+        title: Text('change_lang'.tr),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('English'),
+              onTap: () {
+                Get.updateLocale(const Locale('en', 'US'));
+                Get.back();
+              },
+            ),
+            ListTile(
+              title: const Text('Polski'),
+              onTap: () {
+                Get.updateLocale(const Locale('pl', 'PL'));
+                Get.back();
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
