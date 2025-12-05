@@ -110,53 +110,63 @@ class DashboardPage extends StatelessWidget {
     c.startScan();
     Get.dialog(
       AlertDialog(
-        title: Text('scan_devices'.tr),
+        title: Row(
+          children: [
+            Text('scan_devices'.tr),
+            const Spacer(),
+            Obx(() {
+              if (c.isScanning.value) {
+                return const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                );
+              }
+              return const SizedBox.shrink();
+            }),
+          ],
+        ),
         content: SizedBox(
           width: double.maxFinite,
           height: 300,
           child: Obx(() {
-             if (c.isScanning.value) {
-               return Column(
-                 mainAxisAlignment: MainAxisAlignment.center,
-                 children: [
-                   const CircularProgressIndicator(),
-                   const SizedBox(height: 16),
-                   Text('scanning'.tr),
-                 ],
-               );
-             } else if (c.scanResults.isEmpty) {
-               return Center(child: Text('no_devices'.tr));
-             } else {
-               return ListView.builder(
-                 itemCount: c.scanResults.length,
-                 itemBuilder: (context, index) {
-                   final result = c.scanResults[index];
-                   final deviceName = result.device.platformName.isNotEmpty 
-                       ? result.device.platformName 
-                       : 'unknown_device'.tr;
-                   return ListTile(
-                     title: Text(deviceName),
-                     subtitle: Text(result.device.remoteId.toString()),
-                     trailing: ElevatedButton(
-                       onPressed: () {
-                         c.addDevice(result);
-                         Get.back(); // Close dialog
-                       },
-                       child: Text('add'.tr),
-                     ),
-                   );
-                 },
-               );
-             }
+            if (c.scanResults.isEmpty && c.isScanning.value) {
+              return Center(child: Text('no_devices'.tr));
+            } else {
+              return ListView.builder(
+                itemCount: c.scanResults.length,
+                itemBuilder: (context, index) {
+                  final result = c.scanResults[index];
+                  final deviceName = result.device.platformName.isNotEmpty
+                      ? result.device.platformName
+                      : 'unknown_device'.tr;
+                  return ListTile(
+                    title: Text(deviceName),
+                    subtitle: Text(result.device.remoteId.toString()),
+                    trailing: ElevatedButton(
+                      onPressed: () {
+                        c.addDevice(result);
+                      },
+                      child: Text('add'.tr),
+                    ),
+                  );
+                },
+              );
+            }
           }),
         ),
         actions: [
           TextButton(
-            onPressed: () => Get.back(),
-            child: const Text('Close'),
+            onPressed: () {
+              c.stopScan();
+              Get.back();
+            },
+            child: Text('close'.tr),
           ),
         ],
       ),
+      // Stop scanning when the dialog is dismissed.
+      barrierDismissible: false,
     );
   }
 
@@ -166,7 +176,7 @@ class DashboardPage extends StatelessWidget {
     if (temp > 30) return Colors.red;
     return Colors.green;
   }
-  
+
   Color _getBatteryColor(int level) {
     if (level < 20) return Colors.red;
     if (level < 50) return Colors.orange;
