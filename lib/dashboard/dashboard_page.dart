@@ -158,15 +158,15 @@ class DashboardPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () {
-              c.stopScan();
+              // Removed c.stopScan() to keep background scanning active
               Get.back();
             },
             child: Text('close'.tr),
           ),
         ],
       ),
-      // Stop scanning when the dialog is dismissed.
-      barrierDismissible: false,
+      // Keep scanning active when the dialog is dismissed.
+      barrierDismissible: true,
     );
   }
 

@@ -29,6 +29,8 @@ class DashboardController extends GetxController {
   void onInit() {
     super.onInit();
     fetchSensors();
+    // Start scanning immediately to receive updates for existing sensors
+    startScan();
   }
 
   @override
@@ -89,6 +91,9 @@ class DashboardController extends GetxController {
   }
 
   Future<void> startScan() async {
+    // Avoid restarting scan if already active
+    if (isScanning.value) return;
+
     // Request necessary Bluetooth permissions
     if (await Permission.bluetoothScan.request().isGranted &&
         await Permission.bluetoothConnect.request().isGranted &&
@@ -124,9 +129,16 @@ class DashboardController extends GetxController {
       // Listen to scan results and filter for T&D devices
       await _scanSubscription?.cancel();
       _scanSubscription = FlutterBluePlus.scanResults.listen((results) {
-        scanResults.value = results
+        final filteredResults = results
             .where((r) => r.device.platformName.startsWith('TR'))
             .toList();
+        
+        scanResults.value = filteredResults;
+
+        // Update existing sensors if their data is found in the scan results
+        for (var result in filteredResults) {
+          _updateExistingSensor(result);
+        }
       });
 
       // Start scanning indefinitely.
@@ -145,7 +157,29 @@ class DashboardController extends GetxController {
     await FlutterBluePlus.stopScan();
   }
 
-  /// Adds a new sensor from a scan result or updates an existing one.
+  /// Silently updates an existing sensor if found in the scan result.
+  void _updateExistingSensor(ScanResult result) {
+    final decodedData = _decodeTr4AdvertisingPacket(result.advertisementData);
+
+    if (decodedData != null) {
+      final index = sensors.indexWhere((s) => s.id == decodedData.serialNumber);
+      if (index != -1) {
+        final currentSensor = sensors[index];
+        // Create a new sensor object with updated values
+        final updatedSensor = Sensor(
+          id: currentSensor.id,
+          name: currentSensor.name, // Keep the existing name
+          temperature: decodedData.temperature,
+          humidity: currentSensor.humidity,
+          batteryLevel: (decodedData.batteryLevel / 5.0 * 100).round(),
+          lastUpdated: DateTime.now(),
+        );
+        sensors[index] = updatedSensor;
+      }
+    }
+  }
+
+  /// Adds a new sensor from a scan result or updates an existing one via UI.
   void addDevice(ScanResult result) {
     final decodedData = _decodeTr4AdvertisingPacket(result.advertisementData);
 
