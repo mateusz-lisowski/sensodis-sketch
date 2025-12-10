@@ -1,213 +1,141 @@
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:sensodis_sketch/utils/ble_decoder.dart';
 import '../models/sensor.dart';
-
-/// Decoded data from a T&D advertising packet.
-class _TR4SensorData {
-  final double temperature;
-  final String serialNumber;
-  final int batteryLevel;
-
-  _TR4SensorData({
-    required this.temperature,
-    required this.serialNumber,
-    required this.batteryLevel,
-  });
-}
+import '../services/ble_service.dart';
 
 class DashboardController extends GetxController {
   final sensors = <Sensor>[].obs;
-  final scanResults = <ScanResult>[].obs;
-  final isScanning = false.obs;
-  StreamSubscription<List<ScanResult>>? _scanSubscription;
+  // Access the shared BleService
+  final BleService _bleService = Get.find<BleService>();
+
+  // Expose scan results and scanning state from the service
+  RxList<ScanResult> get scanResults => _bleService.scanResults;
+  RxBool get isScanning => _bleService.isScanning;
+
+  // Track the timestamp of the last processed packet for each sensor to avoid duplicate logs
+  final Map<String, DateTime> _lastLogTimestamps = {};
 
   @override
   void onInit() {
     super.onInit();
     fetchSensors();
-    // Start scanning immediately to receive updates for existing sensors
-    startScan();
+    
+    // Listen to scan results from the service to update existing sensors
+    ever(_bleService.scanResults, (List<ScanResult> results) {
+      for (var result in results) {
+        _updateExistingSensor(result);
+      }
+    });
+
+    // Start scanning via the service
+    _bleService.startScan();
   }
 
   @override
   void onClose() {
-    _scanSubscription?.cancel();
-    FlutterBluePlus.stopScan();
+    // We don't stop the scan here because the service might be used elsewhere,
+    // or we might want to keep scanning in the background if the service allows.
+    // However, if this controller is the only consumer, we might want to stop it.
+    // For now, let's leave the service running or handle its lifecycle separately.
+    // If we want to stop scanning when leaving the dashboard:
+    // _bleService.stopScan(); 
     super.onClose();
   }
 
   /// Clears any existing sensors from the list.
   void fetchSensors() {
     sensors.clear();
+    _lastLogTimestamps.clear();
   }
 
   /// Clears the sensor list. User can re-scan to populate it.
   void refreshSensors() {
     sensors.clear();
+    _lastLogTimestamps.clear();
   }
-
-  /// Decodes the manufacturer-specific data from a T&D advertising packet.
-  _TR4SensorData? _decodeTr4AdvertisingPacket(AdvertisementData data) {
-    // T&D Corporation's Bluetooth Company ID is 0x0392 (914).
-    const tndCompanyId = 914;
-    final manufacturerData = data.manufacturerData;
-
-    if (manufacturerData.containsKey(tndCompanyId)) {
-      final tndData = manufacturerData[tndCompanyId]!;
-      // The TR4 advertising packet payload is 18 bytes.
-      if (tndData.length == 18) {
-        try {
-          final byteData = ByteData.sublistView(Uint8List.fromList(tndData));
-          
-          // <I: Device Serial Number (4B, LE) at offset 0
-          final serialNumberRaw = byteData.getUint32(0, Endian.little);
-          // B: Status Code 2 (1B) -> battery level [1, 5] at offset 7
-          final batteryLevelRaw = byteData.getUint8(7);
-          // <H: Measurement Reading 1 / Raw Temp (2B, LE) at offset 8
-          final rawTemp = byteData.getUint16(8, Endian.little);
-
-          // Convert raw temperature to Celsius
-          final temperature = (rawTemp - 1000) / 10.0;
-          // Format serial number as a hex string
-          final serialNumber =
-              serialNumberRaw.toRadixString(16).toUpperCase().padLeft(8, '0');
-
-          return _TR4SensorData(
-            temperature: temperature,
-            serialNumber: serialNumber,
-            batteryLevel: batteryLevelRaw,
-          );
-        } catch (e) {
-          print("Error decoding T&D packet: $e");
-          return null;
-        }
-      }
-    }
-    return null;
-  }
-
+  
+  /// Wrapper to start scanning from UI
   Future<void> startScan() async {
-    // Avoid restarting scan if already active
-    if (isScanning.value) return;
-
-    // Request necessary Bluetooth permissions
-    if (await Permission.bluetoothScan.request().isGranted &&
-        await Permission.bluetoothConnect.request().isGranted &&
-        await Permission.location.request().isGranted) {
-      
-      // Check if Location Services are enabled
-      if (await Permission.location.serviceStatus != ServiceStatus.enabled) {
-        Get.snackbar('Location Required', 'Please enable Location Services to scan for devices');
-        return;
-      }
-      
-      // Check if Bluetooth is enabled and turn it on if needed
-      if (await FlutterBluePlus.adapterState.first != BluetoothAdapterState.on) {
-        if (GetPlatform.isAndroid) {
-          try {
-            await FlutterBluePlus.turnOn();
-          } catch (e) {
-            Get.snackbar('Error', 'Could not enable Bluetooth');
-            return;
-          }
-        } else {
-          Get.snackbar('Bluetooth Required', 'Please enable Bluetooth to scan for devices');
-          return;
-        }
-      }
-      
-      // Wait for adapter state to be 'on'
-      await FlutterBluePlus.adapterState.where((s) => s == BluetoothAdapterState.on).first;
-
-      isScanning.value = true;
-      scanResults.clear();
-
-      // Listen to scan results and filter for T&D devices
-      await _scanSubscription?.cancel();
-      _scanSubscription = FlutterBluePlus.scanResults.listen((results) {
-        final filteredResults = results
-            .where((r) => r.device.platformName.startsWith('TR'))
-            .toList();
-        
-        scanResults.value = filteredResults;
-
-        // Update existing sensors if their data is found in the scan results
-        for (var result in filteredResults) {
-          _updateExistingSensor(result);
-        }
-      });
-
-      // Start scanning indefinitely.
-      await FlutterBluePlus.startScan();
-    } else {
-       Get.snackbar('Error', 'Bluetooth permissions are required to scan for devices');
-       openAppSettings();
-    }
+    await _bleService.startScan();
   }
 
-  /// Stops the continuous BLE scan.
+  /// Wrapper to stop scanning from UI
   Future<void> stopScan() async {
-    isScanning.value = false;
-    await _scanSubscription?.cancel();
-    _scanSubscription = null;
-    await FlutterBluePlus.stopScan();
+    await _bleService.stopScan();
   }
 
   /// Silently updates an existing sensor if found in the scan result.
   void _updateExistingSensor(ScanResult result) {
-    final decodedData = _decodeTr4AdvertisingPacket(result.advertisementData);
+    final decodedData = decodeTr4AdvertisingPacket(result.advertisementData);
 
     if (decodedData != null) {
+      // Log packet if it is new
+      if (_lastLogTimestamps[decodedData.serialNumber] != result.timeStamp) {
+        _lastLogTimestamps[decodedData.serialNumber] = result.timeStamp;
+        print('TR4 Packet: Serial=${decodedData.serialNumber}, Temp=${decodedData.temperature}, Battery=${decodedData.batteryLevel}, RSSI=${result.rssi}, Time=${result.timeStamp}');
+      }
+
       final index = sensors.indexWhere((s) => s.id == decodedData.serialNumber);
       if (index != -1) {
-        final currentSensor = sensors[index];
-        // Create a new sensor object with updated values
-        final updatedSensor = Sensor(
-          id: currentSensor.id,
-          name: currentSensor.name, // Keep the existing name
-          temperature: decodedData.temperature,
-          humidity: currentSensor.humidity,
-          batteryLevel: (decodedData.batteryLevel / 5.0 * 100).round(),
-          lastUpdated: DateTime.now(),
-        );
-        sensors[index] = updatedSensor;
+        final sensor = sensors[index];
+        sensor.temperature.value = decodedData.temperature;
+        sensor.batteryLevel.value = (decodedData.batteryLevel / 5.0 * 100).round();
+        sensor.lastUpdated.value = result.timeStamp;
+        sensor.rssi.value = result.rssi;
+        
+        // Force refresh to ensure UI updates even if values haven't changed
+        // This addresses the issue where the UI might not reflect the latest packet reception
+        sensor.temperature.refresh();
+        sensor.batteryLevel.refresh();
+        sensor.lastUpdated.refresh();
+        sensor.rssi.refresh();
       }
     }
   }
 
   /// Adds a new sensor from a scan result or updates an existing one via UI.
   void addDevice(ScanResult result) {
-    final decodedData = _decodeTr4AdvertisingPacket(result.advertisementData);
+    final decodedData = decodeTr4AdvertisingPacket(result.advertisementData);
 
     if (decodedData != null) {
-      final deviceName = result.device.platformName.isNotEmpty 
-          ? result.device.platformName 
+      final deviceName = result.device.platformName.isNotEmpty
+          ? result.device.platformName
           : 'T&D Sensor';
-      
-      final newSensor = Sensor(
-        id: decodedData.serialNumber, // Use serial number as the unique ID
-        name: deviceName,
-        temperature: decodedData.temperature,
-        // Convert battery level from 1-5 scale to percentage
-        batteryLevel: (decodedData.batteryLevel / 5.0 * 100).round(),
-        lastUpdated: DateTime.now(),
-      );
-      
-      // If a sensor with the same ID exists, update it; otherwise, add a new one.
-      final existingIndex = sensors.indexWhere((s) => s.id == newSensor.id);
+
+      final existingIndex =
+          sensors.indexWhere((s) => s.id == decodedData.serialNumber);
       if (existingIndex != -1) {
-        sensors[existingIndex] = newSensor;
+        final sensor = sensors[existingIndex];
+        sensor.name.value = deviceName;
+        sensor.temperature.value = decodedData.temperature;
+        sensor.batteryLevel.value =
+            (decodedData.batteryLevel / 5.0 * 100).round();
+        sensor.lastUpdated.value = result.timeStamp;
+        sensor.rssi.value = result.rssi;
+        
+        // Force refresh
+        sensor.temperature.refresh();
+        sensor.batteryLevel.refresh();
+        sensor.lastUpdated.refresh();
+        sensor.rssi.refresh();
+        
         Get.snackbar('Success', 'sensor_updated'.tr);
       } else {
+        final newSensor = Sensor(
+          id: decodedData.serialNumber,
+          name: deviceName,
+          temperature: decodedData.temperature,
+          batteryLevel: (decodedData.batteryLevel / 5.0 * 100).round(),
+          lastUpdated: result.timeStamp,
+          rssi: result.rssi,
+        );
         sensors.add(newSensor);
         Get.snackbar('Success', 'device_added'.tr);
       }
     } else {
-      // Notify user if data from a 'TR' device can't be decoded
       Get.snackbar('Error', 'Could not read data from this device.');
     }
   }

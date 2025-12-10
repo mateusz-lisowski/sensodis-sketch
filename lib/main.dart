@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'login/login_page.dart';
 import 'messages.dart';
+import 'services/ble_service.dart';
 
 void main() {
+  // Initialize services
+  Get.put(BleService());
+  
   runApp(const MyApp());
 }
 

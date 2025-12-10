@@ -39,13 +39,13 @@ class DashboardPage extends StatelessWidget {
             final sensor = c.sensors[index];
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: ListTile(
+              child: Obx(() => ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: _getTemperatureColor(sensor.temperature),
+                  backgroundColor: _getTemperatureColor(sensor.temperature.value),
                   foregroundColor: Colors.white,
                   child: const Icon(Icons.thermostat),
                 ),
-                title: Text(sensor.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                title: Text(sensor.name.value, style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -60,16 +60,16 @@ class DashboardPage extends StatelessWidget {
                           children: [
                             Icon(Icons.thermostat, size: 16, color: Colors.grey[600]),
                             const SizedBox(width: 4),
-                            Text('${'temperature'.tr}: ${sensor.temperature}°C'),
+                            Text('${'temperature'.tr}: ${sensor.temperature.value}°C'),
                           ],
                         ),
-                        if (sensor.humidity != null)
+                        if (sensor.humidity.value != null)
                           Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(Icons.water_drop, size: 16, color: Colors.grey[600]),
                               const SizedBox(width: 4),
-                              Text('${'humidity'.tr}: ${sensor.humidity}%'),
+                              Text('${'humidity'.tr}: ${sensor.humidity.value}%'),
                             ],
                           ),
                       ],
@@ -77,12 +77,16 @@ class DashboardPage extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.battery_std, size: 16, color: _getBatteryColor(sensor.batteryLevel)),
+                        Icon(Icons.battery_std, size: 16, color: _getBatteryColor(sensor.batteryLevel.value)),
                         const SizedBox(width: 4),
-                        Text('${'battery'.tr}: ${sensor.batteryLevel}%'),
+                        Text('${'battery'.tr}: ${sensor.batteryLevel.value}%'),
+                        const SizedBox(width: 16),
+                        Icon(Icons.signal_cellular_alt, size: 16, color: _getRssiColor(sensor.rssi.value)),
+                        const SizedBox(width: 4),
+                        Text('${sensor.rssi.value} dBm'),
                         const Spacer(),
                         Text(
-                          DateFormat('HH:mm:ss').format(sensor.lastUpdated),
+                          DateFormat('HH:mm:ss').format(sensor.lastUpdated.value),
                           style: TextStyle(color: Colors.grey[500], fontSize: 12),
                         ),
                       ],
@@ -92,7 +96,7 @@ class DashboardPage extends StatelessWidget {
                 onTap: () {
                   // Navigate to sensor details if needed
                 },
-              ),
+              )),
             );
           },
         ),
@@ -181,5 +185,11 @@ class DashboardPage extends StatelessWidget {
     if (level < 20) return Colors.red;
     if (level < 50) return Colors.orange;
     return Colors.green;
+  }
+
+  Color _getRssiColor(int rssi) {
+    if (rssi > -60) return Colors.green;
+    if (rssi > -80) return Colors.orange;
+    return Colors.red;
   }
 }
