@@ -1,6 +1,7 @@
 import 'dart:async';
 
-import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:drift/drift.dart';
+import 'package:flutter_blue_plus/flutter_blue_plus.dart' as ble;
 import 'package:get/get.dart';
 import 'package:sensodis_sketch/utils/ble_decoder.dart';
 import '../models/sensor.dart';
@@ -15,7 +16,7 @@ class DashboardController extends GetxController {
   final AppDatabase _database = Get.find<AppDatabase>();
 
   // List to hold unique discovered devices
-  final discoveredDevices = <ScanResult>[].obs;
+  final discoveredDevices = <ble.ScanResult>[].obs;
 
   // Expose scanning state from the service
   RxBool get isScanning => _bleService.isScanning;
@@ -27,9 +28,9 @@ class DashboardController extends GetxController {
   void onInit() {
     super.onInit();
     fetchSensors();
-    
+
     // Listen to scan results from the service to update existing sensors and discovered devices list
-    ever(_bleService.scanResults, (List<ScanResult> results) {
+    ever(_bleService.scanResults, (List<ble.ScanResult> results) {
       for (var result in results) {
         _updateExistingSensor(result);
         _updateDiscoveredDevices(result);
@@ -49,7 +50,7 @@ class DashboardController extends GetxController {
   Future<void> fetchSensors() async {
     sensors.clear();
     _lastLogTimestamps.clear();
-    
+
     final savedSensors = await _database.getAllSensors();
     for (var s in savedSensors) {
       final sensor = Sensor(
@@ -73,7 +74,7 @@ class DashboardController extends GetxController {
     _lastLogTimestamps.clear();
     discoveredDevices.clear();
   }
-  
+
   /// Wrapper to start scanning from UI
   Future<void> startScan() async {
     discoveredDevices.clear();
@@ -86,7 +87,7 @@ class DashboardController extends GetxController {
   }
 
   /// Updates the list of discovered devices with the latest scan result
-  void _updateDiscoveredDevices(ScanResult result) {
+  void _updateDiscoveredDevices(ble.ScanResult result) {
     final index = discoveredDevices.indexWhere((r) => r.device.remoteId == result.device.remoteId);
     if (index != -1) {
       discoveredDevices[index] = result;
@@ -96,37 +97,41 @@ class DashboardController extends GetxController {
   }
 
   /// Silently updates an existing sensor if found in the scan result.
-  void _updateExistingSensor(ScanResult result) {
+  void _updateExistingSensor(ble.ScanResult result) {
     final decodedData = decodeTr4AdvertisingPacket(result.advertisementData);
 
     if (decodedData != null) {
       // Log packet if it is new
       if (_lastLogTimestamps[decodedData.serialNumber] != result.timeStamp) {
         _lastLogTimestamps[decodedData.serialNumber] = result.timeStamp;
-        print('TR4 Packet: Serial=${decodedData.serialNumber}, Temp=${decodedData.temperature}, Battery=${decodedData.batteryLevel}, RSSI=${result.rssi}, Time=${result.timeStamp}');
+        // print('TR4 Packet: Serial=${decodedData.serialNumber}, Temp=${decodedData.temperature}, Battery=${decodedData.batteryLevel}, RSSI=${result.rssi}, Time=${result.timeStamp}');
       }
 
       final index = sensors.indexWhere((s) => s.id == decodedData.serialNumber);
       if (index != -1) {
         final sensor = sensors[index];
-        sensor.temperature.value = decodedData.temperature;
-        sensor.batteryLevel.value = (decodedData.batteryLevel / 5.0 * 100).round();
-        sensor.lastUpdated.value = result.timeStamp;
-        sensor.rssi.value = result.rssi;
-        
-        // Force refresh to ensure UI updates even if values haven't changed
-        sensor.temperature.refresh();
-        sensor.batteryLevel.refresh();
-        sensor.lastUpdated.refresh();
-        sensor.rssi.refresh();
+        // Only update and persist if timestamp is newer
+        if (sensor.lastUpdated.value.isBefore(result.timeStamp)) {
+          sensor.temperature.value = decodedData.temperature;
+          sensor.batteryLevel.value = (decodedData.batteryLevel / 5.0 * 100).round();
+          sensor.lastUpdated.value = result.timeStamp;
+          sensor.rssi.value = result.rssi;
 
-        _persistSensor(sensor);
+          // Force refresh to ensure UI updates even if values haven't changed
+          sensor.temperature.refresh();
+          sensor.batteryLevel.refresh();
+          sensor.lastUpdated.refresh();
+          sensor.rssi.refresh();
+
+          _persistSensor(sensor);
+          _addMeasure(sensor);
+        }
       }
     }
   }
 
   /// Adds a new sensor from a scan result or updates an existing one via UI.
-  void addDevice(ScanResult result) {
+  void addDevice(ble.ScanResult result) {
     final decodedData = decodeTr4AdvertisingPacket(result.advertisementData);
 
     if (decodedData != null) {
@@ -135,7 +140,7 @@ class DashboardController extends GetxController {
           : 'T&D Sensor';
 
       final existingIndex =
-          sensors.indexWhere((s) => s.id == decodedData.serialNumber);
+      sensors.indexWhere((s) => s.id == decodedData.serialNumber);
       if (existingIndex != -1) {
         final sensor = sensors[existingIndex];
         sensor.name.value = deviceName;
@@ -144,7 +149,7 @@ class DashboardController extends GetxController {
             (decodedData.batteryLevel / 5.0 * 100).round();
         sensor.lastUpdated.value = result.timeStamp;
         sensor.rssi.value = result.rssi;
-        
+
         // Force refresh
         sensor.temperature.refresh();
         sensor.batteryLevel.refresh();
@@ -152,7 +157,8 @@ class DashboardController extends GetxController {
         sensor.rssi.refresh();
 
         _persistSensor(sensor);
-        
+        _addMeasure(sensor);
+
         Get.snackbar('Success', 'sensor_updated'.tr);
       } else {
         final newSensor = Sensor(
@@ -165,6 +171,7 @@ class DashboardController extends GetxController {
         );
         sensors.add(newSensor);
         _persistSensor(newSensor);
+        _addMeasure(newSensor);
         Get.snackbar('Success', 'device_added'.tr);
       }
     } else {
@@ -182,5 +189,16 @@ class DashboardController extends GetxController {
       lastUpdated: sensor.lastUpdated.value,
       rssi: sensor.rssi.value,
     ));
+  }
+
+  void _addMeasure(Sensor sensor) {
+    _database.addMeasure(
+      sensor.id,
+      sensor.temperature.value,
+      sensor.humidity.value,
+      sensor.batteryLevel.value,
+      sensor.lastUpdated.value,
+      sensor.rssi.value,
+    );
   }
 }

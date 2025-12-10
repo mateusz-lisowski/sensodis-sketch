@@ -21,12 +21,37 @@ class Sensors extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DriftDatabase(tables: [Sensors])
+@DataClassName('MeasureEntity')
+class Measures extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get sensorId => text().references(Sensors, #id)();
+  RealColumn get temperature => real()();
+  RealColumn get humidity => real().nullable()();
+  IntColumn get batteryLevel => integer()();
+  DateTimeColumn get timestamp => dateTime()();
+  IntColumn get rssi => integer()();
+}
+
+@DriftDatabase(tables: [Sensors, Measures])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration {
+    return MigrationStrategy(
+      onCreate: (Migrator m) async {
+        await m.createAll();
+      },
+      onUpgrade: (Migrator m, int from, int to) async {
+        if (from < 2) {
+          await m.createTable(measures);
+        }
+      },
+    );
+  }
 
   Future<int> insertSensor(SensorEntity sensor) {
     return into(sensors).insert(sensor, mode: InsertMode.insertOrReplace);
@@ -38,6 +63,51 @@ class AppDatabase extends _$AppDatabase {
 
   Future<int> deleteSensor(String id) {
     return (delete(sensors)..where((t) => t.id.equals(id))).go();
+  }
+
+  Future<void> addMeasure(
+      String sensorId,
+      double temperature,
+      double? humidity,
+      int batteryLevel,
+      DateTime timestamp,
+      int rssi,
+      ) {
+    return transaction(() async {
+      await into(measures).insert(MeasuresCompanion.insert(
+        sensorId: sensorId,
+        temperature: temperature,
+        humidity: Value(humidity),
+        batteryLevel: batteryLevel,
+        timestamp: timestamp,
+        rssi: rssi,
+      ));
+
+      // Check count and keep only last 100
+      // We want to keep the newest 100 records.
+      // DELETE FROM measures WHERE sensorId = ? AND id NOT IN (
+      //   SELECT id FROM measures WHERE sensorId = ? ORDER BY timestamp DESC LIMIT 100
+      // )
+
+      final subquery = selectOnly(measures)
+        ..addColumns([measures.id])
+        ..where(measures.sensorId.equals(sensorId))
+        ..orderBy([OrderingTerm(expression: measures.timestamp, mode: OrderingMode.desc)])
+        ..limit(100);
+
+      await (delete(measures)
+        ..where((t) =>
+        t.sensorId.equals(sensorId) & t.id.isNotInQuery(subquery)))
+          .go();
+    });
+  }
+
+  Future<List<MeasureEntity>> getSensorHistory(String sensorId) {
+    return (select(measures)
+      ..where((t) => t.sensorId.equals(sensorId))
+      ..orderBy(
+          [(t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc)]))
+        .get();
   }
 }
 
