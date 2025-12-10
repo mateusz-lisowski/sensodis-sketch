@@ -25,7 +25,8 @@ class DetailsPage extends StatelessWidget {
             onTap: controller.changeTab,
             backgroundColor: Theme.of(context).colorScheme.primary,
             selectedItemColor: Theme.of(context).colorScheme.secondary,
-            unselectedItemColor: Theme.of(context).colorScheme.onPrimary.withOpacity(0.6),
+            // withOpacity is deprecated, using withValues instead
+            unselectedItemColor: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.6),
             items: [
               BottomNavigationBarItem(
                 icon: const Icon(Icons.info),
@@ -33,7 +34,7 @@ class DetailsPage extends StatelessWidget {
               ),
               BottomNavigationBarItem(
                 icon: const Icon(Icons.history),
-                label: 'History',
+                label: 'history'.tr,
               ),
             ],
           )),
@@ -54,9 +55,9 @@ class DetailsPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Obx(() => _buildDetailItem(context, 'Name', sensor.name.value, Icons.label)),
+          Obx(() => _buildDetailItem(context, 'name'.tr, sensor.name.value, Icons.label)),
           const Divider(),
-          _buildDetailItem(context, 'ID', sensor.id, Icons.fingerprint),
+          _buildDetailItem(context, 'id'.tr, sensor.id, Icons.fingerprint),
           const Divider(),
           Obx(() => _buildDetailItem(context, 'temperature'.tr, '${sensor.temperature.value}°C', Icons.thermostat)),
           const Divider(),
@@ -88,7 +89,7 @@ class DetailsPage extends StatelessWidget {
       }
 
       if (controller.history.isEmpty) {
-        return const Center(child: Text('No history available'));
+        return Center(child: Text('no_history'.tr));
       }
 
       return ListView.separated(
@@ -100,7 +101,7 @@ class DetailsPage extends StatelessWidget {
           return ListTile(
             leading: Icon(Icons.history, color: Theme.of(context).colorScheme.primary),
             title: Text(
-              '${measure.temperature}°C' + (measure.humidity != null ? ' | ${measure.humidity}%' : ''),
+              '${measure.temperature}°C${measure.humidity != null ? ' | ${measure.humidity}%' : ''}',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(measure.timestamp)),

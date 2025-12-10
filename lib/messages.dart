@@ -28,6 +28,14 @@ class Messages extends Translations {
           'last_updated': 'Last Updated',
           'rssi': 'Signal Strength',
           'close': 'Close',
+          'name': 'Name',
+          'id': 'ID',
+          'history': 'History',
+          'no_history': 'No history available',
+          'success': 'Success',
+          'error': 'Error',
+          'sensor_updated': 'Sensor updated',
+          'read_error': 'Could not read data from this device.',
         },
         'pl_PL': {
           'hello': 'Witaj Świecie',
@@ -54,6 +62,14 @@ class Messages extends Translations {
           'last_updated': 'Ostatnia aktualizacja',
           'rssi': 'Siła sygnału',
           'close': 'Zamknij',
+          'name': 'Nazwa',
+          'id': 'ID',
+          'history': 'Historia',
+          'no_history': 'Brak historii',
+          'success': 'Sukces',
+          'error': 'Błąd',
+          'sensor_updated': 'Czujnik zaktualizowany',
+          'read_error': 'Nie udało się odczytać danych z tego urządzenia.',
         }
       };
 }
