@@ -11,8 +11,10 @@ class DashboardController extends GetxController {
   // Access the shared BleService
   final BleService _bleService = Get.find<BleService>();
 
-  // Expose scan results and scanning state from the service
-  RxList<ScanResult> get scanResults => _bleService.scanResults;
+  // List to hold unique discovered devices
+  final discoveredDevices = <ScanResult>[].obs;
+
+  // Expose scanning state from the service
   RxBool get isScanning => _bleService.isScanning;
 
   // Track the timestamp of the last processed packet for each sensor to avoid duplicate logs
@@ -23,10 +25,11 @@ class DashboardController extends GetxController {
     super.onInit();
     fetchSensors();
     
-    // Listen to scan results from the service to update existing sensors
+    // Listen to scan results from the service to update existing sensors and discovered devices list
     ever(_bleService.scanResults, (List<ScanResult> results) {
       for (var result in results) {
         _updateExistingSensor(result);
+        _updateDiscoveredDevices(result);
       }
     });
 
@@ -36,12 +39,6 @@ class DashboardController extends GetxController {
 
   @override
   void onClose() {
-    // We don't stop the scan here because the service might be used elsewhere,
-    // or we might want to keep scanning in the background if the service allows.
-    // However, if this controller is the only consumer, we might want to stop it.
-    // For now, let's leave the service running or handle its lifecycle separately.
-    // If we want to stop scanning when leaving the dashboard:
-    // _bleService.stopScan(); 
     super.onClose();
   }
 
@@ -55,16 +52,28 @@ class DashboardController extends GetxController {
   void refreshSensors() {
     sensors.clear();
     _lastLogTimestamps.clear();
+    discoveredDevices.clear();
   }
   
   /// Wrapper to start scanning from UI
   Future<void> startScan() async {
+    discoveredDevices.clear();
     await _bleService.startScan();
   }
 
   /// Wrapper to stop scanning from UI
   Future<void> stopScan() async {
     await _bleService.stopScan();
+  }
+
+  /// Updates the list of discovered devices with the latest scan result
+  void _updateDiscoveredDevices(ScanResult result) {
+    final index = discoveredDevices.indexWhere((r) => r.device.remoteId == result.device.remoteId);
+    if (index != -1) {
+      discoveredDevices[index] = result;
+    } else {
+      discoveredDevices.add(result);
+    }
   }
 
   /// Silently updates an existing sensor if found in the scan result.
@@ -87,7 +96,6 @@ class DashboardController extends GetxController {
         sensor.rssi.value = result.rssi;
         
         // Force refresh to ensure UI updates even if values haven't changed
-        // This addresses the issue where the UI might not reflect the latest packet reception
         sensor.temperature.refresh();
         sensor.batteryLevel.refresh();
         sensor.lastUpdated.refresh();

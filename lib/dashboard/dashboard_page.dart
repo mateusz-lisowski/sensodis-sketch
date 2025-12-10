@@ -15,17 +15,15 @@ class DashboardPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: AppBarIcon(),
-        title: Text(
-          'dashboard'.tr,
-          style: TextStyle(fontWeight: FontWeight.bold),
+        title: Center(
+          child: Text(
+            'dashboard'.tr,
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
         ),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: c.refreshSensors,
-          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => Get.to(() => const SettingsPage()),
@@ -134,13 +132,13 @@ class DashboardPage extends StatelessWidget {
           width: double.maxFinite,
           height: 300,
           child: Obx(() {
-            if (c.scanResults.isEmpty && c.isScanning.value) {
+            if (c.discoveredDevices.isEmpty && c.isScanning.value) {
               return Center(child: Text('no_devices'.tr));
             } else {
               return ListView.builder(
-                itemCount: c.scanResults.length,
+                itemCount: c.discoveredDevices.length,
                 itemBuilder: (context, index) {
-                  final result = c.scanResults[index];
+                  final result = c.discoveredDevices[index];
                   final deviceName = result.device.platformName.isNotEmpty
                       ? result.device.platformName
                       : 'unknown_device'.tr;
