@@ -5,6 +5,7 @@ import '../widgets/app_bar_icon.dart';
 import '../settings/settings_page.dart';
 import '../details/details_page.dart';
 import 'dashboard_controller.dart';
+import '../utils/sensor_status_colors.dart';
 
 class DashboardPage extends StatelessWidget {
   final DashboardController c = Get.put(DashboardController());
@@ -40,7 +41,7 @@ class DashboardPage extends StatelessWidget {
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Obx(() => ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: _getTemperatureColor(sensor.temperature.value),
+                  backgroundColor: SensorStatusColors.getTemperatureColor(sensor.temperature.value),
                   foregroundColor: Colors.white,
                   child: const Icon(Icons.thermostat),
                 ),
@@ -76,11 +77,11 @@ class DashboardPage extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.battery_std, size: 16, color: _getBatteryColor(sensor.batteryLevel.value)),
+                        Icon(Icons.battery_std, size: 16, color: SensorStatusColors.getBatteryColor(sensor.batteryLevel.value)),
                         const SizedBox(width: 4),
                         Text('${'battery'.tr}: ${sensor.batteryLevel.value}%'),
                         const SizedBox(width: 16),
-                        Icon(Icons.signal_cellular_alt, size: 16, color: _getRssiColor(sensor.rssi.value)),
+                        Icon(Icons.signal_cellular_alt, size: 16, color: SensorStatusColors.getRssiColor(sensor.rssi.value)),
                         const SizedBox(width: 4),
                         Text('${sensor.rssi.value} dBm'),
                         const Spacer(),
@@ -171,24 +172,5 @@ class DashboardPage extends StatelessWidget {
       // Keep scanning active when the dialog is dismissed.
       barrierDismissible: true,
     );
-  }
-
-  Color _getTemperatureColor(double temp) {
-    if (temp < 0) return Colors.blue;
-    if (temp > 25) return Colors.orange;
-    if (temp > 30) return Colors.red;
-    return Colors.green;
-  }
-
-  Color _getBatteryColor(int level) {
-    if (level < 20) return Colors.red;
-    if (level < 50) return Colors.orange;
-    return Colors.green;
-  }
-
-  Color _getRssiColor(int rssi) {
-    if (rssi > -60) return Colors.green;
-    if (rssi > -80) return Colors.orange;
-    return Colors.red;
   }
 }
