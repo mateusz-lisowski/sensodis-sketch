@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'database/app_database.dart';
 import 'login/login_page.dart';
 import 'messages.dart';
 import 'services/ble_service.dart';
@@ -7,6 +8,7 @@ import 'services/ble_service.dart';
 void main() {
   // Initialize services
   Get.put(BleService());
+  Get.put(AppDatabase());
   
   runApp(const MyApp());
 }

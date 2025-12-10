@@ -5,11 +5,14 @@ import 'package:get/get.dart';
 import 'package:sensodis_sketch/utils/ble_decoder.dart';
 import '../models/sensor.dart';
 import '../services/ble_service.dart';
+import '../database/app_database.dart';
 
 class DashboardController extends GetxController {
   final sensors = <Sensor>[].obs;
   // Access the shared BleService
   final BleService _bleService = Get.find<BleService>();
+  // Access the database
+  final AppDatabase _database = Get.find<AppDatabase>();
 
   // List to hold unique discovered devices
   final discoveredDevices = <ScanResult>[].obs;
@@ -42,10 +45,26 @@ class DashboardController extends GetxController {
     super.onClose();
   }
 
-  /// Clears any existing sensors from the list.
-  void fetchSensors() {
+  /// Clears any existing sensors from the list and reloads from database.
+  Future<void> fetchSensors() async {
     sensors.clear();
     _lastLogTimestamps.clear();
+    
+    final savedSensors = await _database.getAllSensors();
+    for (var s in savedSensors) {
+      final sensor = Sensor(
+        id: s.id,
+        name: s.name,
+        temperature: s.temperature,
+        humidity: s.humidity,
+        batteryLevel: s.batteryLevel,
+        lastUpdated: s.lastUpdated,
+        rssi: s.rssi,
+      );
+      sensors.add(sensor);
+      // Prevent re-logging the same timestamp if we scan it immediately
+      _lastLogTimestamps[sensor.id] = sensor.lastUpdated.value;
+    }
   }
 
   /// Clears the sensor list. User can re-scan to populate it.
@@ -100,6 +119,8 @@ class DashboardController extends GetxController {
         sensor.batteryLevel.refresh();
         sensor.lastUpdated.refresh();
         sensor.rssi.refresh();
+
+        _persistSensor(sensor);
       }
     }
   }
@@ -129,6 +150,8 @@ class DashboardController extends GetxController {
         sensor.batteryLevel.refresh();
         sensor.lastUpdated.refresh();
         sensor.rssi.refresh();
+
+        _persistSensor(sensor);
         
         Get.snackbar('Success', 'sensor_updated'.tr);
       } else {
@@ -141,10 +164,23 @@ class DashboardController extends GetxController {
           rssi: result.rssi,
         );
         sensors.add(newSensor);
+        _persistSensor(newSensor);
         Get.snackbar('Success', 'device_added'.tr);
       }
     } else {
       Get.snackbar('Error', 'Could not read data from this device.');
     }
+  }
+
+  void _persistSensor(Sensor sensor) {
+    _database.insertSensor(SensorEntity(
+      id: sensor.id,
+      name: sensor.name.value,
+      temperature: sensor.temperature.value,
+      humidity: sensor.humidity.value,
+      batteryLevel: sensor.batteryLevel.value,
+      lastUpdated: sensor.lastUpdated.value,
+      rssi: sensor.rssi.value,
+    ));
   }
 }
