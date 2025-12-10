@@ -6,6 +6,7 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:location/location.dart' as loc;
+import '../utils/ble_decoder.dart';
 
 class BleService extends GetxService {
   final isScanning = false.obs;
@@ -346,29 +347,13 @@ class BleService extends GetxService {
 
   void _logScanResults(List<ScanResult> results) {
     for (final result in results) {
-      final device = result.device;
-      final advData = result.advertisementData;
+      // Use shared decoder logic
+      final decodedData = decodeTr4AdvertisingPacket(result.advertisementData);
 
-      // Parse T&D manufacturer data if available
-      if (advData.manufacturerData.containsKey(tndCompanyId)) {
-        final data = advData.manufacturerData[tndCompanyId];
-        if (data != null && data.length >= 14) {
-          try {
-            // Parse T&D packet (adjust based on your actual packet format)
-            final serial = data.sublist(2, 6).map((b) => b.toRadixString(16).padLeft(2, '0')).join('');
-            final tempRaw = (data[10] << 8) | data[11];
-            final temp = tempRaw / 10.0;
-            final battery = data[12];
-            final rssi = result.rssi;
-            final time = DateTime.now();
-
-            print('TR4 Packet: Serial=$serial, Temp=$temp, Battery=$battery, RSSI=$rssi, Time=$time');
-          } catch (e) {
-            print('Error parsing T&D packet: $e');
-          }
-        }
-      } else if (device.platformName.isNotEmpty) {
-        print('Found device: ${device.platformName}, RSSI: ${result.rssi}');
+      if (decodedData != null) {
+        print('TR4 Packet: Serial=${decodedData.serialNumber}, Temp=${decodedData.temperature}, Battery=${decodedData.batteryLevel}, RSSI=${result.rssi}, Time=${DateTime.now()}');
+      } else if (result.device.platformName.isNotEmpty) {
+        print('Found device: ${result.device.platformName}, RSSI: ${result.rssi}');
       }
     }
   }
