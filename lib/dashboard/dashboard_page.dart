@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../widgets/app_bar_icon.dart';
 import '../settings/settings_page.dart';
+import '../details/details_page.dart';
 import 'dashboard_controller.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -92,7 +93,7 @@ class DashboardPage extends StatelessWidget {
                   ],
                 ),
                 onTap: () {
-                  // Navigate to sensor details if needed
+                  Get.to(() => DetailsPage(sensor: sensor));
                 },
               )),
             );

@@ -24,6 +24,10 @@ class Messages extends Translations {
           'scanning': 'Scanning...',
           'unknown_device': 'Unknown Device',
           'settings': 'Settings',
+          'details': 'Details',
+          'last_updated': 'Last Updated',
+          'rssi': 'Signal Strength',
+          'close': 'Close',
         },
         'pl_PL': {
           'hello': 'Witaj Świecie',
@@ -46,6 +50,10 @@ class Messages extends Translations {
           'scanning': 'Skanowanie...',
           'unknown_device': 'Nieznane urządzenie',
           'settings': 'Ustawienia',
+          'details': 'Szczegóły',
+          'last_updated': 'Ostatnia aktualizacja',
+          'rssi': 'Siła sygnału',
+          'close': 'Zamknij',
         }
       };
 }
