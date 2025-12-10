@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 import 'package:intl/intl.dart';
 import '../models/sensor.dart';
 import 'details_controller.dart';
+import '../widgets/detail_item.dart';
 
 class DetailsPage extends StatelessWidget {
   final Sensor sensor;
@@ -55,28 +56,28 @@ class DetailsPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Obx(() => _buildDetailItem(context, 'name'.tr, sensor.name.value, Icons.label)),
+          Obx(() => DetailItem(label: 'name'.tr, value: sensor.name.value, icon: Icons.label)),
           const Divider(),
-          _buildDetailItem(context, 'id'.tr, sensor.id, Icons.fingerprint),
+          DetailItem(label: 'id'.tr, value: sensor.id, icon: Icons.fingerprint),
           const Divider(),
-          Obx(() => _buildDetailItem(context, 'temperature'.tr, '${sensor.temperature.value}°C', Icons.thermostat)),
+          Obx(() => DetailItem(label: 'temperature'.tr, value: '${sensor.temperature.value}°C', icon: Icons.thermostat)),
           const Divider(),
           Obx(() {
             if (sensor.humidity.value != null) {
               return Column(
                 children: [
-                  _buildDetailItem(context, 'humidity'.tr, '${sensor.humidity.value}%', Icons.water_drop),
+                  DetailItem(label: 'humidity'.tr, value: '${sensor.humidity.value}%', icon: Icons.water_drop),
                   const Divider(),
                 ],
               );
             }
             return const SizedBox.shrink();
           }),
-          Obx(() => _buildDetailItem(context, 'battery'.tr, '${sensor.batteryLevel.value}%', Icons.battery_std)),
+          Obx(() => DetailItem(label: 'battery'.tr, value: '${sensor.batteryLevel.value}%', icon: Icons.battery_std)),
           const Divider(),
-          Obx(() => _buildDetailItem(context, 'rssi'.tr, '${sensor.rssi.value} dBm', Icons.signal_cellular_alt)),
+          Obx(() => DetailItem(label: 'rssi'.tr, value: '${sensor.rssi.value} dBm', icon: Icons.signal_cellular_alt)),
           const Divider(),
-          Obx(() => _buildDetailItem(context, 'last_updated'.tr, DateFormat('yyyy-MM-dd HH:mm:ss').format(sensor.lastUpdated.value), Icons.access_time)),
+          Obx(() => DetailItem(label: 'last_updated'.tr, value: DateFormat('yyyy-MM-dd HH:mm:ss').format(sensor.lastUpdated.value), icon: Icons.access_time)),
         ],
       ),
     );
@@ -110,37 +111,5 @@ class DetailsPage extends StatelessWidget {
         },
       );
     });
-  }
-
-  Widget _buildDetailItem(BuildContext context, String label, String value, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        children: [
-          Icon(icon, size: 28, color: Theme.of(context).colorScheme.secondary),
-          const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  color: Colors.grey[600],
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
   }
 }
