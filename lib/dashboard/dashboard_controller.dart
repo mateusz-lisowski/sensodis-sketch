@@ -56,6 +56,11 @@ class DashboardController extends GetxController {
       if (index != -1) {
         final sensor = sensors[index];
 
+        // Only update if we have a newer advertisement frame
+        if (!result.timeStamp.isAfter(sensor.lastUpdated.value)) {
+          return;
+        }
+
         // Update sensor with latest data
         sensor.temperature.value = decodedData.temperature;
         sensor.batteryLevel.value = (decodedData.batteryLevel / 5.0 * 100).round();
@@ -109,6 +114,11 @@ class DashboardController extends GetxController {
       _saveSensorAndMeasure(newSensor);
       Get.snackbar('Success', 'device_added'.tr);
     }
+  }
+
+  Future<void> deleteSensor(Sensor sensor) async {
+    await _database.deleteSensor(sensor.id);
+    sensors.remove(sensor);
   }
 
   void _saveSensorAndMeasure(Sensor sensor) {
