@@ -43,6 +43,7 @@ class DashboardController extends GetxController {
         batteryLevel: s.batteryLevel,
         lastUpdated: s.lastUpdated,
         rssi: s.rssi,
+        isFavorite: s.isFavorite,
       ));
     }
   }
@@ -121,6 +122,13 @@ class DashboardController extends GetxController {
     sensors.remove(sensor);
   }
 
+  void toggleFavorite(Sensor sensor) {
+    sensor.isFavorite.toggle();
+    _saveSensorAndMeasure(sensor);
+    // Force refresh the list to re-sort
+    sensors.refresh();
+  }
+
   void _saveSensorAndMeasure(Sensor sensor) {
     // Save sensor to database
     _database.insertSensor(SensorEntity(
@@ -131,6 +139,7 @@ class DashboardController extends GetxController {
       batteryLevel: sensor.batteryLevel.value,
       lastUpdated: sensor.lastUpdated.value,
       rssi: sensor.rssi.value,
+      isFavorite: sensor.isFavorite.value,
     ));
 
     // Add measurement to database

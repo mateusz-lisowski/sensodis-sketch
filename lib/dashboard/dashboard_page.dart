@@ -35,18 +35,34 @@ class DashboardPage extends StatelessWidget {
           ),
         ],
       ),
-      body: Obx(
-            () => ListView.builder(
-          itemCount: c.sensors.length,
+      body: Obx(() {
+        // Sort sensors by favorite status
+        final sortedSensors = c.sensors.toList()
+          ..sort((a, b) {
+            if (a.isFavorite.value && !b.isFavorite.value) {
+              return -1;
+            } else if (!a.isFavorite.value && b.isFavorite.value) {
+              return 1;
+            } else {
+              return a.name.value.compareTo(b.name.value);
+            }
+          });
+
+        return ListView.builder(
+          itemCount: sortedSensors.length,
           itemBuilder: (context, index) {
-            final sensor = c.sensors[index];
+            final sensor = sortedSensors[index];
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               child: Obx(() => InkWell(
                 onTap: () {
                   Get.to(() => DetailsPage(sensor: sensor));
                 },
-                onLongPress: () => _showDeleteConfirmation(context, sensor),
+                onLongPress: () {
+                  if (!sensor.isFavorite.value) {
+                    _showDeleteConfirmation(context, sensor);
+                  }
+                },
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
@@ -72,9 +88,17 @@ class DashboardPage extends StatelessWidget {
                               ],
                             ),
                           ),
-                          Text(
-                            DateFormat('HH:mm:ss').format(sensor.lastUpdated.value),
-                            style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                          IconButton(
+                            icon: Icon(
+                              sensor.isFavorite.value ? Icons.star : Icons.star_border,
+                              color: sensor.isFavorite.value ? Colors.orange : Colors.grey,
+                            ),
+                            onPressed: () {
+                              c.toggleFavorite(sensor);
+                            },
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                            visualDensity: VisualDensity.compact,
                           ),
                         ],
                       ),
@@ -82,12 +106,21 @@ class DashboardPage extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            '${sensor.temperature.value}°C',
-                            style: const TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.bold,
-                            ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                '${sensor.temperature.value}°C',
+                                style: const TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                DateFormat('HH:mm:ss').format(sensor.lastUpdated.value),
+                                style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                              ),
+                            ],
                           ),
                           Row(
                             children: [
@@ -126,8 +159,8 @@ class DashboardPage extends StatelessWidget {
               )),
             );
           },
-        ),
-      ),
+        );
+      }),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Theme.of(context).colorScheme.secondary,
         foregroundColor: Theme.of(context).colorScheme.onSecondary,

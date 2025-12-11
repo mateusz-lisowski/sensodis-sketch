@@ -10,7 +10,7 @@ class DetailsPage extends StatelessWidget {
   final DetailsController controller;
 
   DetailsPage({super.key, required this.sensor})
-      : controller = Get.put(DetailsController(sensorId: sensor.id));
+      : controller = Get.put(DetailsController(sensor: sensor));
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +19,15 @@ class DetailsPage extends StatelessWidget {
         title: Text('details'.tr),
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
+        actions: [
+          Obx(() => IconButton(
+                icon: Icon(
+                  sensor.isFavorite.value ? Icons.star : Icons.star_border,
+                  color: sensor.isFavorite.value ? Colors.orange : null,
+                ),
+                onPressed: controller.toggleFavorite,
+              )),
+        ],
       ),
       body: Obx(() => _buildBody(context)),
       bottomNavigationBar: Obx(() => BottomNavigationBar(
@@ -26,8 +35,7 @@ class DetailsPage extends StatelessWidget {
             onTap: controller.changeTab,
             backgroundColor: Theme.of(context).colorScheme.primary,
             selectedItemColor: Theme.of(context).colorScheme.secondary,
-            // withOpacity is deprecated, using withValues instead
-            unselectedItemColor: Theme.of(context).colorScheme.onPrimary.withValues(alpha: 0.6),
+            unselectedItemColor: Theme.of(context).colorScheme.onPrimary.withAlpha(153),
             items: [
               BottomNavigationBarItem(
                 icon: const Icon(Icons.info),

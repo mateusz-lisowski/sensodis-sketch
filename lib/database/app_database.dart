@@ -16,6 +16,7 @@ class Sensors extends Table {
   IntColumn get batteryLevel => integer()();
   DateTimeColumn get lastUpdated => dateTime()();
   IntColumn get rssi => integer()();
+  BoolColumn get isFavorite => boolean().withDefault(const Constant(false))();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -37,7 +38,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration {
@@ -48,6 +49,9 @@ class AppDatabase extends _$AppDatabase {
       onUpgrade: (Migrator m, int from, int to) async {
         if (from < 2) {
           await m.createTable(measures);
+        }
+        if (from < 3) {
+          await m.addColumn(sensors, sensors.isFavorite);
         }
       },
     );

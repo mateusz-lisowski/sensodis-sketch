@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'package:get/get.dart';
 import '../database/app_database.dart';
+import '../models/sensor.dart';
 
 class DetailsController extends GetxController {
-  final String sensorId;
+  final Sensor sensor;
   final AppDatabase _database = Get.find<AppDatabase>();
   
   final currentTab = 0.obs;
@@ -13,7 +14,7 @@ class DetailsController extends GetxController {
   // Timer to periodically refresh history
   Timer? _refreshTimer;
 
-  DetailsController({required this.sensorId});
+  DetailsController({required this.sensor});
 
   @override
   void onInit() {
@@ -41,10 +42,14 @@ class DetailsController extends GetxController {
     if (history.isEmpty) isLoading.value = true;
     
     try {
-      final data = await _database.getSensorHistory(sensorId);
+      final data = await _database.getSensorHistory(sensor.id);
       history.assignAll(data);
     } finally {
       isLoading.value = false;
     }
+  }
+  
+  void toggleFavorite() {
+    sensor.isFavorite.toggle();
   }
 }

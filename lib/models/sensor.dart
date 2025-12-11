@@ -8,6 +8,7 @@ class Sensor {
   final RxInt batteryLevel;
   final Rx<DateTime> lastUpdated;
   final RxInt rssi;
+  final RxBool isFavorite;
 
   Sensor({
     required this.id,
@@ -17,12 +18,14 @@ class Sensor {
     required int batteryLevel,
     required DateTime lastUpdated,
     required int rssi,
+    bool isFavorite = false,
   })  : name = name.obs,
         temperature = temperature.obs,
         humidity = RxnDouble(humidity),
         batteryLevel = batteryLevel.obs,
         lastUpdated = lastUpdated.obs,
-        rssi = rssi.obs;
+        rssi = rssi.obs,
+        isFavorite = isFavorite.obs;
 
   @override
   bool operator ==(Object other) =>
