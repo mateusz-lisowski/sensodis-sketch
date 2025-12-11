@@ -1,10 +1,12 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as ble;
 import 'package:get/get.dart';
 import 'package:sensodis_sketch/utils/ble_decoder.dart';
 import '../models/sensor.dart';
 import '../services/ble_service.dart';
 import '../database/app_database.dart';
+import '../utils/dummy_sensors.dart';
 
 class DashboardController extends GetxController {
   final sensors = <Sensor>[].obs;
@@ -34,17 +36,30 @@ class DashboardController extends GetxController {
     sensors.clear();
     final savedSensors = await _database.getAllSensors();
 
-    for (var s in savedSensors) {
-      sensors.add(Sensor(
-        id: s.id,
-        name: s.name,
-        temperature: s.temperature,
-        humidity: s.humidity,
-        batteryLevel: s.batteryLevel,
-        lastUpdated: s.lastUpdated,
-        rssi: s.rssi,
-        isFavorite: s.isFavorite,
-      ));
+    if (savedSensors.isEmpty && kDebugMode) {
+      await _addDummySensors();
+    } else {
+      for (var s in savedSensors) {
+        sensors.add(Sensor(
+          id: s.id,
+          name: s.name,
+          temperature: s.temperature,
+          humidity: s.humidity,
+          batteryLevel: s.batteryLevel,
+          lastUpdated: s.lastUpdated,
+          rssi: s.rssi,
+          isFavorite: s.isFavorite,
+        ));
+      }
+    }
+  }
+
+  Future<void> _addDummySensors() async {
+    final dummySensors = getDummySensors();
+
+    for (var s in dummySensors) {
+      sensors.add(s);
+      _saveSensorAndMeasure(s);
     }
   }
 
