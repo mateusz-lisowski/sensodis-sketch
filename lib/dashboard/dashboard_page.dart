@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import '../utils/ble_decoder.dart';
 import '../widgets/app_bar_icon.dart';
 import '../settings/settings_page.dart';
 import '../details/details_page.dart';
 import 'dashboard_controller.dart';
+import '../services/ble_service.dart';
 import '../utils/sensor_status_colors.dart';
 
 class DashboardPage extends StatelessWidget {
@@ -33,7 +35,7 @@ class DashboardPage extends StatelessWidget {
         ],
       ),
       body: Obx(
-        () => ListView.builder(
+            () => ListView.builder(
           itemCount: c.sensors.length,
           itemBuilder: (context, index) {
             final sensor = c.sensors[index];
@@ -104,22 +106,23 @@ class DashboardPage extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         backgroundColor: Theme.of(context).colorScheme.secondary,
         foregroundColor: Theme.of(context).colorScheme.onSecondary,
-        onPressed: () => _showScanDialog(context),
+        onPressed: () => _showAddDeviceDialog(context),
         child: const Icon(Icons.add),
       ),
     );
   }
 
-  void _showScanDialog(BuildContext context) {
-    c.startScan();
+  void _showAddDeviceDialog(BuildContext context) {
+    final BleService bleService = Get.find<BleService>();
+
     Get.dialog(
       AlertDialog(
         title: Row(
           children: [
-            Text('scan_devices'.tr),
+            Text('available_devices'.tr),
             const Spacer(),
             Obx(() {
-              if (c.isScanning.value) {
+              if (bleService.isScanning.value) {
                 return const SizedBox(
                   width: 20,
                   height: 20,
@@ -134,31 +137,72 @@ class DashboardPage extends StatelessWidget {
           width: double.maxFinite,
           height: 300,
           child: Obx(() {
-            if (c.discoveredDevices.isEmpty && c.isScanning.value) {
-              return Center(child: Text('no_devices'.tr));
+            final currentDevices = bleService.devices;
+
+            if (currentDevices.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.bluetooth_searching, size: 48, color: Colors.grey[400]),
+                    const SizedBox(height: 16),
+                    Text('searching_devices'.tr),
+                    const SizedBox(height: 8),
+                    Text(
+                      'scanning_automatically'.tr,
+                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                    ),
+                  ],
+                ),
+              );
             } else {
               return ListView.builder(
-                itemCount: c.discoveredDevices.length,
+                itemCount: currentDevices.length,
                 itemBuilder: (context, index) {
-                  final result = c.discoveredDevices[index];
+                  final result = currentDevices[index];
                   final deviceName = result.device.platformName.isNotEmpty
                       ? result.device.platformName
                       : 'unknown_device'.tr;
-                      
+
+                  // Get device ID from the BLE decoder
+                  final decodedData = decodeTr4AdvertisingPacket(result.advertisementData);
+                  final deviceId = decodedData?.serialNumber ?? result.device.remoteId.toString();
+
                   // Check if device is already added
-                  final isAdded = c.isSensorAdded(result);
-                  
+                  final isAdded = c.isSensorAdded(deviceId);
+
                   return ListTile(
                     title: Text(deviceName),
-                    subtitle: Text(result.device.remoteId.toString()),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('ID: $deviceId'),
+                        Text('RSSI: ${result.rssi} dBm'),
+                      ],
+                    ),
                     trailing: isAdded
-                        ? const Icon(Icons.check_circle, color: Colors.green)
+                        ? Container(
+                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.green[50],
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.green, size: 16),
+                          SizedBox(width: 4),
+                          Text('added'.tr, style: TextStyle(color: Colors.green)),
+                        ],
+                      ),
+                    )
                         : ElevatedButton(
-                            onPressed: () {
-                              c.addDevice(result);
-                            },
-                            child: Text('add'.tr),
-                          ),
+                      onPressed: () {
+                        c.addDevice(result);
+                        Get.back();
+                      },
+                      child: Text('add'.tr),
+                    ),
                   );
                 },
               );
@@ -167,15 +211,11 @@ class DashboardPage extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () {
-              // Removed c.stopScan() to keep background scanning active
-              Get.back();
-            },
+            onPressed: () => Get.back(),
             child: Text('close'.tr),
           ),
         ],
       ),
-      // Keep scanning active when the dialog is dismissed.
       barrierDismissible: true,
     );
   }
