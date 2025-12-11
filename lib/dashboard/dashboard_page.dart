@@ -144,15 +144,21 @@ class DashboardPage extends StatelessWidget {
                   final deviceName = result.device.platformName.isNotEmpty
                       ? result.device.platformName
                       : 'unknown_device'.tr;
+                      
+                  // Check if device is already added
+                  final isAdded = c.isSensorAdded(result);
+                  
                   return ListTile(
                     title: Text(deviceName),
                     subtitle: Text(result.device.remoteId.toString()),
-                    trailing: ElevatedButton(
-                      onPressed: () {
-                        c.addDevice(result);
-                      },
-                      child: Text('add'.tr),
-                    ),
+                    trailing: isAdded
+                        ? const Icon(Icons.check_circle, color: Colors.green)
+                        : ElevatedButton(
+                            onPressed: () {
+                              c.addDevice(result);
+                            },
+                            child: Text('add'.tr),
+                          ),
                   );
                 },
               );
