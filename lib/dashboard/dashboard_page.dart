@@ -29,24 +29,152 @@ class DashboardPage extends StatelessWidget {
         backgroundColor: Theme.of(context).colorScheme.primary,
         foregroundColor: Theme.of(context).colorScheme.onPrimary,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => Get.to(() => const SettingsPage()),
-          ),
+          Obx(() => PopupMenuButton<dynamic>(
+            icon: Icon(
+              c.currentFilter.value == SensorFilter.favorites 
+                  ? Icons.filter_list_off 
+                  : Icons.more_vert,
+            ),
+            onSelected: (value) {
+              if (value is SensorFilter) {
+                c.setFilter(value);
+              } else if (value is SensorSort) {
+                c.setSort(value);
+              } else if (value == 'settings') {
+                Get.to(() => const SettingsPage());
+              }
+            },
+            itemBuilder: (BuildContext context) => <PopupMenuEntry<dynamic>>[
+              // Filter Section
+              PopupMenuItem<SensorFilter>(
+                value: SensorFilter.all,
+                child: Row(
+                  children: [
+                    Icon(Icons.list, color: Colors.black),
+                    SizedBox(width: 8),
+                    Text('show_all'.tr),
+                    if (c.currentFilter.value == SensorFilter.all)
+                      const Spacer(),
+                    if (c.currentFilter.value == SensorFilter.all)
+                      const Icon(Icons.check, color: Colors.blue),
+                  ],
+                ),
+              ),
+              PopupMenuItem<SensorFilter>(
+                value: SensorFilter.favorites,
+                child: Row(
+                  children: [
+                    Icon(Icons.star, color: Colors.orange),
+                    SizedBox(width: 8),
+                    Text('show_favorites'.tr),
+                    if (c.currentFilter.value == SensorFilter.favorites)
+                      const Spacer(),
+                    if (c.currentFilter.value == SensorFilter.favorites)
+                      const Icon(Icons.check, color: Colors.blue),
+                  ],
+                ),
+              ),
+              const PopupMenuDivider(),
+              
+              // Sort Section Header (Disabled item as label)
+              PopupMenuItem<String>(
+                enabled: false,
+                child: Text('sort_by'.tr, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey[600])),
+              ),
+              PopupMenuItem<SensorSort>(
+                value: SensorSort.none,
+                child: Row(
+                  children: [
+                    SizedBox(width: 32), // Indent
+                    Text('sort_none'.tr),
+                    if (c.currentSort.value == SensorSort.none)
+                      const Spacer(),
+                    if (c.currentSort.value == SensorSort.none)
+                      const Icon(Icons.check, color: Colors.blue),
+                  ],
+                ),
+              ),
+              PopupMenuItem<SensorSort>(
+                value: SensorSort.favorites,
+                child: Row(
+                  children: [
+                    SizedBox(width: 32), // Indent
+                    Text('sort_favorites'.tr),
+                    if (c.currentSort.value == SensorSort.favorites)
+                      const Spacer(),
+                    if (c.currentSort.value == SensorSort.favorites)
+                      const Icon(Icons.check, color: Colors.blue),
+                  ],
+                ),
+              ),
+              PopupMenuItem<SensorSort>(
+                value: SensorSort.temperatureAsc,
+                child: Row(
+                  children: [
+                    SizedBox(width: 32), // Indent
+                    Text('sort_temp'.tr),
+                    SizedBox(width: 4),
+                    Icon(Icons.arrow_upward, size: 16, color: Colors.grey),
+                    if (c.currentSort.value == SensorSort.temperatureAsc)
+                      const Spacer(),
+                    if (c.currentSort.value == SensorSort.temperatureAsc)
+                      const Icon(Icons.check, color: Colors.blue),
+                  ],
+                ),
+              ),
+              PopupMenuItem<SensorSort>(
+                value: SensorSort.temperatureDesc,
+                child: Row(
+                  children: [
+                    SizedBox(width: 32), // Indent
+                    Text('sort_temp'.tr),
+                    SizedBox(width: 4),
+                    Icon(Icons.arrow_downward, size: 16, color: Colors.grey),
+                    if (c.currentSort.value == SensorSort.temperatureDesc)
+                      const Spacer(),
+                    if (c.currentSort.value == SensorSort.temperatureDesc)
+                      const Icon(Icons.check, color: Colors.blue),
+                  ],
+                ),
+              ),
+              
+              const PopupMenuDivider(),
+              
+              // Settings Section
+              PopupMenuItem<String>(
+                value: 'settings',
+                child: Row(
+                  children: [
+                    const Icon(Icons.settings, color: Colors.grey),
+                    const SizedBox(width: 8),
+                    Text('settings'.tr),
+                  ],
+                ),
+              ),
+            ],
+          )),
         ],
       ),
       body: Obx(() {
-        // Sort sensors by favorite status
-        final sortedSensors = c.sensors.toList()
-          ..sort((a, b) {
-            if (a.isFavorite.value && !b.isFavorite.value) {
-              return -1;
-            } else if (!a.isFavorite.value && b.isFavorite.value) {
-              return 1;
-            } else {
-              return a.name.value.compareTo(b.name.value);
-            }
-          });
+        final sortedSensors = c.sortedAndFilteredSensors;
+
+        if (sortedSensors.isEmpty) {
+           return Center(
+             child: Column(
+               mainAxisAlignment: MainAxisAlignment.center,
+               children: [
+                 Icon(Icons.sensors_off, size: 64, color: Colors.grey[400]),
+                 SizedBox(height: 16),
+                 Text(
+                   c.currentFilter.value == SensorFilter.favorites
+                       ? 'no_favorites_found'.tr
+                       : 'no_sensors_found'.tr,
+                   style: TextStyle(color: Colors.grey[600]),
+                 ),
+               ],
+             ),
+           );
+        }
 
         return ListView.builder(
           itemCount: sortedSensors.length,

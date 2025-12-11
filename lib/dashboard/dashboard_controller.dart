@@ -8,13 +8,59 @@ import '../services/ble_service.dart';
 import '../database/app_database.dart';
 import '../utils/dummy_sensors.dart';
 
+enum SensorFilter { all, favorites }
+enum SensorSort { none, favorites, temperatureAsc, temperatureDesc }
+
 class DashboardController extends GetxController {
   final sensors = <Sensor>[].obs;
+  final currentFilter = SensorFilter.all.obs;
+  final currentSort = SensorSort.favorites.obs; // Default to favorites based on previous requirement, can be changed to none if desired
+  
   final BleService _bleService = Get.find<BleService>();
   final AppDatabase _database = Get.find<AppDatabase>();
 
   // Note: Removed discoveredDevices since BleService now handles scanning automatically
   RxBool get isScanning => _bleService.isScanning;
+
+  List<Sensor> get sortedAndFilteredSensors {
+    List<Sensor> filtered;
+    if (currentFilter.value == SensorFilter.favorites) {
+      filtered = sensors.where((s) => s.isFavorite.value).toList();
+    } else {
+      filtered = sensors.toList();
+    }
+
+    filtered.sort((a, b) {
+      switch (currentSort.value) {
+        case SensorSort.favorites:
+          if (a.isFavorite.value && !b.isFavorite.value) {
+            return -1;
+          } else if (!a.isFavorite.value && b.isFavorite.value) {
+            return 1;
+          }
+          return a.name.value.compareTo(b.name.value);
+        case SensorSort.temperatureAsc:
+          // Sort by temperature ascending (coldest first)
+          return a.temperature.value.compareTo(b.temperature.value);
+        case SensorSort.temperatureDesc:
+          // Sort by temperature descending (hottest first)
+          return b.temperature.value.compareTo(a.temperature.value);
+        case SensorSort.none:
+        default:
+          return a.name.value.compareTo(b.name.value);
+      }
+    });
+    
+    return filtered;
+  }
+
+  void setFilter(SensorFilter filter) {
+    currentFilter.value = filter;
+  }
+  
+  void setSort(SensorSort sort) {
+    currentSort.value = sort;
+  }
 
   @override
   void onInit() {
@@ -140,7 +186,7 @@ class DashboardController extends GetxController {
   void toggleFavorite(Sensor sensor) {
     sensor.isFavorite.toggle();
     _saveSensorAndMeasure(sensor);
-    // Force refresh the list to re-sort
+    // Force refresh the list to re-sort/filter
     sensors.refresh();
   }
 

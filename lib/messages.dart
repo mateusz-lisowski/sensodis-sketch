@@ -44,6 +44,14 @@ class Messages extends Translations {
           'delete_sensor_confirmation': 'Are you sure you want to delete @name? This will also erase all database data.',
           'cancel': 'Cancel',
           'delete': 'Delete',
+          'show_all': 'Show All',
+          'show_favorites': 'Show Favorites',
+          'no_favorites_found': 'No favorite sensors found',
+          'no_sensors_found': 'No sensors found',
+          'sort_by': 'Sort by',
+          'sort_none': 'None',
+          'sort_favorites': 'Favorites',
+          'sort_temp': 'Temperature',
         },
         'pl_PL': {
           'hello': 'Witaj Świecie',
@@ -86,6 +94,14 @@ class Messages extends Translations {
           'delete_sensor_confirmation': 'Czy na pewno chcesz usunąć @name? To usunie również wszystkie dane z bazy.',
           'cancel': 'Anuluj',
           'delete': 'Usuń',
+          'show_all': 'Pokaż wszystkie',
+          'show_favorites': 'Pokaż ulubione',
+          'no_favorites_found': 'Nie znaleziono ulubionych czujników',
+          'no_sensors_found': 'Nie znaleziono czujników',
+          'sort_by': 'Sortuj wg',
+          'sort_none': 'Brak',
+          'sort_favorites': 'Ulubione',
+          'sort_temp': 'Temperatura',
         }
       };
 }
