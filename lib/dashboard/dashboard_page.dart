@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:intl/intl.dart';
+import '../models/sensor.dart';
 import '../utils/ble_decoder.dart';
 import '../widgets/app_bar_icon.dart';
 import '../settings/settings_page.dart';
@@ -41,63 +42,87 @@ class DashboardPage extends StatelessWidget {
             final sensor = c.sensors[index];
             return Card(
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Obx(() => ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: SensorStatusColors.getTemperatureColor(sensor.temperature.value),
-                  foregroundColor: Colors.white,
-                  child: const Icon(Icons.thermostat),
-                ),
-                title: Text(sensor.name.value, style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 4),
-                    Wrap(
-                      spacing: 16,
-                      runSpacing: 4,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: [
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.thermostat, size: 16, color: Colors.grey[600]),
-                            const SizedBox(width: 4),
-                            Text('${'temperature'.tr}: ${sensor.temperature.value}°C'),
-                          ],
-                        ),
-                        if (sensor.humidity.value != null)
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.water_drop, size: 16, color: Colors.grey[600]),
-                              const SizedBox(width: 4),
-                              Text('${'humidity'.tr}: ${sensor.humidity.value}%'),
-                            ],
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(Icons.battery_std, size: 16, color: SensorStatusColors.getBatteryColor(sensor.batteryLevel.value)),
-                        const SizedBox(width: 4),
-                        Text('${'battery'.tr}: ${sensor.batteryLevel.value}%'),
-                        const SizedBox(width: 16),
-                        Icon(Icons.signal_cellular_alt, size: 16, color: SensorStatusColors.getRssiColor(sensor.rssi.value)),
-                        const SizedBox(width: 4),
-                        Text('${sensor.rssi.value} dBm'),
-                        const Spacer(),
-                        Text(
-                          DateFormat('HH:mm:ss').format(sensor.lastUpdated.value),
-                          style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+              child: Obx(() => InkWell(
                 onTap: () {
                   Get.to(() => DetailsPage(sensor: sensor));
                 },
+                onLongPress: () => _showDeleteConfirmation(context, sensor),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: SensorStatusColors.getTemperatureColor(sensor.temperature.value),
+                            foregroundColor: Colors.white,
+                            child: const Icon(Icons.thermostat),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(sensor.name.value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                                Text(
+                                  sensor.id,
+                                  style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Text(
+                            DateFormat('HH:mm:ss').format(sensor.lastUpdated.value),
+                            style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            '${sensor.temperature.value}°C',
+                            style: const TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Row(
+                            children: [
+                              if (sensor.humidity.value != null) ...[
+                                Column(
+                                  children: [
+                                    Icon(Icons.water_drop, color: Colors.grey[600]),
+                                    const SizedBox(height: 4),
+                                    Text('${sensor.humidity.value}%', style: const TextStyle(fontSize: 12)),
+                                  ],
+                                ),
+                                const SizedBox(width: 16),
+                              ],
+                              Column(
+                                children: [
+                                  Icon(Icons.battery_std, color: SensorStatusColors.getBatteryColor(sensor.batteryLevel.value)),
+                                  const SizedBox(height: 4),
+                                  Text('${sensor.batteryLevel.value}%', style: const TextStyle(fontSize: 12)),
+                                ],
+                              ),
+                              const SizedBox(width: 16),
+                              Column(
+                                children: [
+                                  Icon(Icons.signal_cellular_alt, color: SensorStatusColors.getRssiColor(sensor.rssi.value)),
+                                  const SizedBox(height: 4),
+                                  Text('${sensor.rssi.value} dBm', style: const TextStyle(fontSize: 12)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               )),
             );
           },
@@ -108,6 +133,29 @@ class DashboardPage extends StatelessWidget {
         foregroundColor: Theme.of(context).colorScheme.onSecondary,
         onPressed: () => _showAddDeviceDialog(context),
         child: const Icon(Icons.add),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, Sensor sensor) {
+    Get.dialog(
+      AlertDialog(
+        title: Text('delete_sensor'.tr),
+        content: Text('delete_sensor_confirmation'.trParams({'name': sensor.name.value})),
+        actions: [
+          TextButton(
+            onPressed: () => Get.back(),
+            child: Text('cancel'.tr),
+          ),
+          TextButton(
+            onPressed: () {
+              c.deleteSensor(sensor);
+              Get.back();
+            },
+            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            child: Text('delete'.tr),
+          ),
+        ],
       ),
     );
   }

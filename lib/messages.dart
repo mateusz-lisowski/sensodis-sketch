@@ -36,6 +36,14 @@ class Messages extends Translations {
           'error': 'Error',
           'sensor_updated': 'Sensor updated',
           'read_error': 'Could not read data from this device.',
+          'available_devices': 'Available Devices',
+          'searching_devices': 'Searching for devices...',
+          'scanning_automatically': 'Scanning automatically...',
+          'added': 'Added',
+          'delete_sensor': 'Delete Sensor',
+          'delete_sensor_confirmation': 'Are you sure you want to delete @name? This will also erase all database data.',
+          'cancel': 'Cancel',
+          'delete': 'Delete',
         },
         'pl_PL': {
           'hello': 'Witaj Świecie',
@@ -70,6 +78,14 @@ class Messages extends Translations {
           'error': 'Błąd',
           'sensor_updated': 'Czujnik zaktualizowany',
           'read_error': 'Nie udało się odczytać danych z tego urządzenia.',
+          'available_devices': 'Dostępne urządzenia',
+          'searching_devices': 'Szukanie urządzeń...',
+          'scanning_automatically': 'Skanowanie automatyczne...',
+          'added': 'Dodano',
+          'delete_sensor': 'Usuń czujnik',
+          'delete_sensor_confirmation': 'Czy na pewno chcesz usunąć @name? To usunie również wszystkie dane z bazy.',
+          'cancel': 'Anuluj',
+          'delete': 'Usuń',
         }
       };
 }

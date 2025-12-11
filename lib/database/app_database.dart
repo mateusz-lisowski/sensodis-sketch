@@ -61,8 +61,11 @@ class AppDatabase extends _$AppDatabase {
     return select(sensors).get();
   }
 
-  Future<int> deleteSensor(String id) {
-    return (delete(sensors)..where((t) => t.id.equals(id))).go();
+  Future<void> deleteSensor(String id) {
+    return transaction(() async {
+      await (delete(measures)..where((t) => t.sensorId.equals(id))).go();
+      await (delete(sensors)..where((t) => t.id.equals(id))).go();
+    });
   }
 
   Future<void> addMeasure(
