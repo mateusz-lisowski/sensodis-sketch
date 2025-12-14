@@ -1,16 +1,17 @@
-# sensodis_sketch
+# Sensodis sketch
 
-A new Flutter project.
+## TODO
 
-## Getting Started
+## Useful commands
 
-This project is a starting point for a Flutter application.
+### Generating database schema
 
-A few resources to get you started if this is your first Flutter project:
+```shell
+flutter pub run build_runner build
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+### Generating app icon
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+```shell
+flutter pub run flutter_launcher_icons  
+```
