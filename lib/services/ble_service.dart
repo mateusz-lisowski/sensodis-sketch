@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:get/get.dart';
+import 'package:location/location.dart' hide PermissionStatus;
+import 'package:permission_handler/permission_handler.dart';
+import '../utils/app_constants.dart';
 
 class BleService extends GetxService {
   final devices = <ScanResult>[].obs;
@@ -18,11 +21,55 @@ class BleService extends GetxService {
   Future<void> _startAutoScan() async {
     while (true) {
       try {
+        await _ensurePermissionsAndServices();
         await _startScan();
         break; // Exit loop if successful
       } catch (e) {
-        print("Scan failed, retrying in 3s: $e");
+        print("Setup failed, retrying in 3s: $e");
         await Future.delayed(Duration(seconds: 3));
+      }
+    }
+  }
+
+  /// Unified interface to check and request all necessary permissions and services
+  Future<void> _ensurePermissionsAndServices() async {
+    // 1. Request Runtime Permissions
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.location,
+      Permission.bluetoothScan,
+      Permission.bluetoothConnect,
+    ].request();
+
+    if (statuses[Permission.location]!.isDenied ||
+        statuses[Permission.bluetoothScan]!.isDenied ||
+        statuses[Permission.bluetoothConnect]!.isDenied) {
+      throw Exception("Required permissions are denied.");
+    }
+
+    // 2. Ensure Bluetooth is On
+    if (await FlutterBluePlus.adapterState.first == BluetoothAdapterState.off) {
+      try {
+        await FlutterBluePlus.turnOn();
+        // Wait up to 5 seconds for Bluetooth to turn on
+        try {
+            await FlutterBluePlus.adapterState
+                .firstWhere((s) => s == BluetoothAdapterState.on)
+                .timeout(Duration(seconds: 5));
+        } catch (_) {
+            throw Exception("Bluetooth failed to turn on in time.");
+        }
+      } catch (e) {
+        throw Exception("Could not turn on Bluetooth: $e");
+      }
+    }
+
+    // 3. Ensure Location Service is Enabled
+    Location location = Location();
+    bool serviceEnabled = await location.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await location.requestService();
+      if (!serviceEnabled) {
+        throw Exception("Location service is disabled.");
       }
     }
   }
@@ -34,7 +81,7 @@ class BleService extends GetxService {
     _scanSub = FlutterBluePlus.scanResults.listen((results) {
       devices.value = results.where((r) {
         return r.device.platformName.startsWith('TR') ||
-            r.advertisementData.manufacturerData.containsKey(914);
+            r.advertisementData.manufacturerData.containsKey(AppConstants.tndCompanyId);
       }).toList();
     });
 
@@ -44,7 +91,7 @@ class BleService extends GetxService {
     });
 
     await FlutterBluePlus.startScan(
-      timeout: Duration(seconds: 30),
+      timeout: Duration(seconds: 60),
       continuousUpdates: true,
       androidUsesFineLocation: true,
     );
