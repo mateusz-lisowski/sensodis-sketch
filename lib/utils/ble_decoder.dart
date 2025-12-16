@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'app_constants.dart';
 
 /// Decoded data from a T&D advertising packet.
 class TR4SensorData {
@@ -16,12 +17,11 @@ class TR4SensorData {
 
 /// Decodes the manufacturer-specific data from a T&D advertising packet.
 TR4SensorData? decodeTr4AdvertisingPacket(AdvertisementData data) {
-  // T&D Corporation's Bluetooth Company ID is 0x0392 (914).
-  const tndCompanyId = 914;
+  // T&D Corporation's Bluetooth Company ID
   final manufacturerData = data.manufacturerData;
 
-  if (manufacturerData.containsKey(tndCompanyId)) {
-    final tndData = manufacturerData[tndCompanyId]!;
+  if (manufacturerData.containsKey(AppConstants.tndCompanyId)) {
+    final tndData = manufacturerData[AppConstants.tndCompanyId]!;
     // The TR4 advertising packet payload is 18 bytes.
     if (tndData.length == 18) {
       try {
