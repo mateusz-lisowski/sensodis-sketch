@@ -323,6 +323,8 @@ class DashboardPage extends StatelessWidget {
 
   void _showAddDeviceDialog(BuildContext context) {
     final BleService bleService = Get.find<BleService>();
+    final searchQuery = ''.obs;
+    final searchController = TextEditingController();
 
     Get.dialog(
       AlertDialog(
@@ -344,79 +346,107 @@ class DashboardPage extends StatelessWidget {
         ),
         content: SizedBox(
           width: double.maxFinite,
-          height: 300,
-          child: Obx(() {
-            final currentDevices = bleService.devices;
-
-            if (currentDevices.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.bluetooth_searching, size: 48, color: Colors.grey[400]),
-                    const SizedBox(height: 16),
-                    Text('searching_devices'.tr),
-                    const SizedBox(height: 8),
-                    Text(
-                      'scanning_automatically'.tr,
-                      style: TextStyle(color: Colors.grey[500], fontSize: 12),
-                    ),
-                  ],
+          height: 350,
+          child: Column(
+            children: [
+              TextField(
+                controller: searchController,
+                decoration: InputDecoration(
+                  // TODO: Change to translated string
+                  labelText: 'Search by name',
+                  prefixIcon: const Icon(Icons.search),
+                  suffixIcon: IconButton(
+                    icon: const Icon(Icons.clear),
+                    onPressed: () {
+                      searchController.clear();
+                      searchQuery.value = '';
+                    },
+                  ),
                 ),
-              );
-            } else {
-              return ListView.builder(
-                itemCount: currentDevices.length,
-                itemBuilder: (context, index) {
-                  final result = currentDevices[index];
-                  final deviceName = result.device.platformName.isNotEmpty
-                      ? result.device.platformName
-                      : 'unknown_device'.tr;
+                onChanged: (value) => searchQuery.value = value,
+              ),
+              const SizedBox(height: 8),
+              Expanded(
+                child: Obx(() {
+                  final filteredDevices = bleService.devices.where((device) {
+                    final deviceName = device.device.platformName.isNotEmpty
+                        ? device.device.platformName
+                        : 'unknown_device'.tr;
+                    return deviceName.toLowerCase().contains(searchQuery.value.toLowerCase());
+                  }).toList();
 
-                  // Get device ID from the BLE decoder
-                  final decodedData = decodeTr4AdvertisingPacket(result.advertisementData);
-                  final deviceId = decodedData?.serialNumber ?? result.device.remoteId.toString();
-
-                  // Check if device is already added
-                  final isAdded = c.isSensorAdded(deviceId);
-
-                  return ListTile(
-                    title: Text(deviceName),
-                    subtitle: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('ID: $deviceId'),
-                        Text('RSSI: ${result.rssi} dBm'),
-                      ],
-                    ),
-                    trailing: isAdded
-                        ? Container(
-                      padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.green[50],
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                  if (filteredDevices.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.check_circle, color: Colors.green, size: 16),
-                          SizedBox(width: 4),
-                          Text('added'.tr, style: TextStyle(color: Colors.green)),
+                          Icon(Icons.bluetooth_searching, size: 48, color: Colors.grey[400]),
+                          const SizedBox(height: 16),
+                          Text('searching_devices'.tr),
+                          const SizedBox(height: 8),
+                          Text(
+                            'scanning_automatically'.tr,
+                            style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                          ),
                         ],
                       ),
-                    )
-                        : ElevatedButton(
-                      onPressed: () {
-                        c.addDevice(result);
-                        Get.back();
+                    );
+                  } else {
+                    return ListView.builder(
+                      itemCount: filteredDevices.length,
+                      itemBuilder: (context, index) {
+                        final result = filteredDevices[index];
+                        final deviceName = result.device.platformName.isNotEmpty
+                            ? result.device.platformName
+                            : 'unknown_device'.tr;
+
+                        // Get device ID from the BLE decoder
+                        final decodedData = decodeTr4AdvertisingPacket(result.advertisementData);
+                        final deviceId = decodedData?.serialNumber ?? result.device.remoteId.toString();
+
+                        // Check if device is already added
+                        final isAdded = c.isSensorAdded(deviceId);
+
+                        return ListTile(
+                          title: Text(deviceName),
+                          subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('ID: $deviceId'),
+                              Text('RSSI: ${result.rssi} dBm'),
+                            ],
+                          ),
+                          trailing: isAdded
+                              ? Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.green[50],
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.check_circle, color: Colors.green, size: 16),
+                                const SizedBox(width: 4),
+                                Text('added'.tr, style: const TextStyle(color: Colors.green)),
+                              ],
+                            ),
+                          )
+                              : ElevatedButton(
+                            onPressed: () {
+                              c.addDevice(result);
+                              Get.back();
+                            },
+                            child: Text('add'.tr),
+                          ),
+                        );
                       },
-                      child: Text('add'.tr),
-                    ),
-                  );
-                },
-              );
-            }
-          }),
+                    );
+                  }
+                }),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -425,7 +455,6 @@ class DashboardPage extends StatelessWidget {
           ),
         ],
       ),
-      barrierDismissible: true,
     );
   }
 }
