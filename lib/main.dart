@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 import 'database/app_database.dart';
 import 'dashboard/dashboard_page.dart';
 import 'messages.dart';
 import 'services/ble_service.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   // Initialize services
   Get.put(BleService());
   Get.put(AppDatabase());
-  
+
+  // Keep the screen on.
+  WakelockPlus.enable();
+
   runApp(const MyApp());
 }
 

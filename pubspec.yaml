@@ -35,6 +35,7 @@ dependencies:
   flutter_blue_plus: ^1.32.0
   permission_handler: ^11.3.0
   location: ^8.0.0
+  wakelock_plus: ^1.1.2
 
   # Drift dependencies
   drift: ^2.16.0
