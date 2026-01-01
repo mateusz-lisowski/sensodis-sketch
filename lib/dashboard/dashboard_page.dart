@@ -245,7 +245,7 @@ class DashboardPage extends StatelessWidget {
                                 ),
                               ),
                               Text(
-                                DateFormat('HH:mm:ss').format(sensor.lastUpdated.value),
+                                DateFormat('yyyy-MM-dd HH:mm:ss').format(sensor.lastUpdated.value),
                                 style: TextStyle(color: Colors.grey[500], fontSize: 12),
                               ),
                             ],
