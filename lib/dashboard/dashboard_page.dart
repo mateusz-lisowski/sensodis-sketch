@@ -352,8 +352,7 @@ class DashboardPage extends StatelessWidget {
               TextField(
                 controller: searchController,
                 decoration: InputDecoration(
-                  // TODO: Change to translated string
-                  labelText: 'Search by name',
+                  labelText: 'search_by_name'.tr,
                   prefixIcon: const Icon(Icons.search),
                   suffixIcon: IconButton(
                     icon: const Icon(Icons.clear),

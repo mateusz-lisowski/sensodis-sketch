@@ -52,6 +52,7 @@ class Messages extends Translations {
           'sort_none': 'None',
           'sort_favorites': 'Favorites',
           'sort_temp': 'Temperature',
+          'search_by_name': 'Search by name',
         },
         'pl_PL': {
           'hello': 'Witaj Świecie',
@@ -102,6 +103,7 @@ class Messages extends Translations {
           'sort_none': 'Brak',
           'sort_favorites': 'Ulubione',
           'sort_temp': 'Temperatura',
+          'search_by_name': 'Szukaj po nazwie',
         }
       };
 }
