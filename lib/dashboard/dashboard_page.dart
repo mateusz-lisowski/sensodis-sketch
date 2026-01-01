@@ -429,9 +429,6 @@ class DashboardPage extends StatelessWidget {
                         final decodedData = decodeTr4AdvertisingPacket(result.advertisementData);
                         final deviceId = decodedData?.serialNumber ?? result.device.remoteId.toString();
 
-                        // Check if device is already added
-                        final isAdded = c.isSensorAdded(deviceId);
-
                         return ListTile(
                           title: Text(deviceName),
                           subtitle: Column(
@@ -441,29 +438,31 @@ class DashboardPage extends StatelessWidget {
                               Text('RSSI: ${result.rssi} dBm'),
                             ],
                           ),
-                          trailing: isAdded
-                              ? Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                            decoration: BoxDecoration(
-                              color: Colors.green[50],
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const Icon(Icons.check_circle, color: Colors.green, size: 16),
-                                const SizedBox(width: 4),
-                                Text('added'.tr, style: const TextStyle(color: Colors.green)),
-                              ],
-                            ),
-                          )
-                              : ElevatedButton(
-                            onPressed: () {
-                              c.addDevice(result);
-                              Get.back();
-                            },
-                            child: Text('add'.tr),
-                          ),
+                          trailing: Obx(() {
+                            final isAdded = c.isSensorAdded(deviceId);
+                            return isAdded
+                                ? Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: Colors.green[50],
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.check_circle, color: Colors.green, size: 16),
+                                  const SizedBox(width: 4),
+                                  Text('added'.tr, style: const TextStyle(color: Colors.green)),
+                                ],
+                              ),
+                            )
+                                : ElevatedButton(
+                              onPressed: () {
+                                c.addDevice(result);
+                              },
+                              child: Text('add'.tr),
+                            );
+                          }),
                         );
                       },
                     );
