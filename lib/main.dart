@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'database/app_database.dart';
-import 'login/login_page.dart';
+import 'dashboard/dashboard_page.dart';
 import 'messages.dart';
 import 'services/ble_service.dart';
 
@@ -33,7 +33,7 @@ class MyApp extends StatelessWidget {
         scaffoldBackgroundColor: Colors.white,
         useMaterial3: true,
       ),
-      home: LoginPage(),
+      home: DashboardPage(),
     );
   }
 }
