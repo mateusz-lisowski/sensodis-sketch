@@ -194,6 +194,7 @@ class DashboardPage extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,31 +238,51 @@ class DashboardPage extends StatelessWidget {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                '${sensor.temperature.value}°C',
-                                style: const TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                DateFormat('yyyy-MM-dd HH:mm:ss').format(sensor.lastUpdated.value),
-                                style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                              Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'temperature'.tr,
+                                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                                      ),
+                                      Text(
+                                        '${sensor.temperature.value}°C',
+                                        style: const TextStyle(
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  if (sensor.humidity.value != null) ...[
+                                    const SizedBox(width: 24),
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'humidity'.tr,
+                                          style: TextStyle(color: Colors.grey[500], fontSize: 12),
+                                        ),
+                                        Text(
+                                          '${sensor.humidity.value}%',
+                                          style: const TextStyle(
+                                            fontSize: 32,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+
+                                      ],
+                                    ),
+                                  ]
+                                ],
                               ),
                             ],
                           ),
                           Row(
                             children: [
-                              if (sensor.humidity.value != null) ...[
-                                Column(
-                                  children: [
-                                    Icon(Icons.water_drop, color: Colors.grey[600]),
-                                    const SizedBox(height: 4),
-                                    Text('${sensor.humidity.value}%', style: const TextStyle(fontSize: 12)),
-                                  ],
-                                ),
-                                const SizedBox(width: 16),
-                              ],
                               Column(
                                 children: [
                                   Icon(Icons.battery_std, color: SensorStatusColors.getBatteryColor(sensor.batteryLevel.value)),
@@ -280,6 +301,11 @@ class DashboardPage extends StatelessWidget {
                             ],
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 8.0),
+                      Text(
+                        DateFormat('yyyy-MM-dd HH:mm:ss').format(sensor.lastUpdated.value),
+                        style: TextStyle(color: Colors.grey[500], fontSize: 12),
                       ),
                     ],
                   ),
