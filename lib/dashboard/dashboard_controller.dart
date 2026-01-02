@@ -125,6 +125,9 @@ class DashboardController extends GetxController {
 
         // Update sensor with latest data
         sensor.temperature.value = decodedData.temperature;
+        if (decodedData.humidity != null) {
+          sensor.humidity.value = decodedData.humidity!;
+        }
         sensor.batteryLevel.value = (decodedData.batteryLevel / 5.0 * 100).round();
         sensor.lastUpdated.value = result.timeStamp;
         sensor.rssi.value = result.rssi;
@@ -155,6 +158,9 @@ class DashboardController extends GetxController {
       final sensor = sensors[existingIndex];
       sensor.name.value = deviceName;
       sensor.temperature.value = decodedData.temperature;
+      if (decodedData.humidity != null) {
+        sensor.humidity.value = decodedData.humidity!;
+      }
       sensor.batteryLevel.value = (decodedData.batteryLevel / 5.0 * 100).round();
       sensor.lastUpdated.value = result.timeStamp;
       sensor.rssi.value = result.rssi;
@@ -167,6 +173,7 @@ class DashboardController extends GetxController {
         id: decodedData.serialNumber,
         name: deviceName,
         temperature: decodedData.temperature,
+        humidity: decodedData.humidity,
         batteryLevel: (decodedData.batteryLevel / 5.0 * 100).round(),
         lastUpdated: result.timeStamp,
         rssi: result.rssi,

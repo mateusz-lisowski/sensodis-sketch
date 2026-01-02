@@ -5,11 +5,13 @@ import 'app_constants.dart';
 /// Decoded data from a T&D advertising packet.
 class TR4SensorData {
   final double temperature;
+  final double? humidity;
   final String serialNumber;
   final int batteryLevel;
 
   TR4SensorData({
     required this.temperature,
+    this.humidity,
     required this.serialNumber,
     required this.batteryLevel,
   });
@@ -33,15 +35,22 @@ TR4SensorData? decodeTr4AdvertisingPacket(AdvertisementData data) {
         final batteryLevelRaw = byteData.getUint8(7);
         // <h: Measurement Reading 1 / Raw Temp (2B, LE) at offset 8
         final rawTemp = byteData.getInt16(8, Endian.little);
+        // <h: Measurement Reading 2 / Raw Humidity (2B, LE) at offset 10
+        final rawHumidity = byteData.getInt16(10, Endian.little);
 
         // Convert raw temperature to Celsius
-        final temperature = (rawTemp - 1000) / 10.0; 
+        final temperature = (rawTemp - 1000) / 10.0;
+        // Convert raw humidity to % if valid, otherwise null
+        // We assume that a non-positive value indicates no humidity sensor.
+        var tempHumidity = (rawHumidity - 1000) / 10.0;
+        final humidity = tempHumidity > 0 ? tempHumidity : null;
         // Format serial number as a hex string
         final serialNumber =
             serialNumberRaw.toRadixString(16).toUpperCase().padLeft(8, '0');
 
         return TR4SensorData(
           temperature: temperature,
+          humidity: humidity,
           serialNumber: serialNumber,
           batteryLevel: batteryLevelRaw,
         );
