@@ -166,7 +166,6 @@ class DashboardController extends GetxController {
       sensor.rssi.value = result.rssi;
 
       _saveSensorAndMeasure(sensor);
-      Get.snackbar('Success', 'sensor_updated'.tr);
     } else {
       // Add new sensor
       final newSensor = Sensor(
@@ -181,7 +180,6 @@ class DashboardController extends GetxController {
 
       sensors.add(newSensor);
       _saveSensorAndMeasure(newSensor);
-      Get.snackbar('Success', 'device_added'.tr);
     }
   }
 
