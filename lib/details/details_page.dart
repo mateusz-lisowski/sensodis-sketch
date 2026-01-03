@@ -81,7 +81,7 @@ class DetailsPage extends StatelessWidget {
             }
             return const SizedBox.shrink();
           }),
-          Obx(() => DetailItem(label: 'battery'.tr, value: '${sensor.batteryLevel.value}%', icon: Icons.battery_std)),
+          Obx(() => DetailItem(label: 'battery'.tr, value: '${(sensor.batteryLevel.value / 5 * 100).round()}%', icon: Icons.battery_std)),
           const Divider(),
           Obx(() => DetailItem(label: 'rssi'.tr, value: '${sensor.rssi.value} dBm', icon: Icons.signal_cellular_alt)),
           const Divider(),
@@ -93,10 +93,6 @@ class DetailsPage extends StatelessWidget {
 
   Widget _buildHistoryTab(BuildContext context) {
     return Obx(() {
-      if (controller.isLoading.value) {
-        return const Center(child: CircularProgressIndicator());
-      }
-
       if (controller.history.isEmpty) {
         return Center(child: Text('no_history'.tr));
       }
@@ -114,7 +110,15 @@ class DetailsPage extends StatelessWidget {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(measure.timestamp)),
-            trailing: Text('${measure.batteryLevel}% Bat'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (measure.backedUp)
+                  Icon(Icons.check_circle, color: Colors.green, size: 16),
+                SizedBox(width: 8),
+                Text('${(measure.batteryLevel / 5 * 100).round()}% Bat'),
+              ],
+            ),
           );
         },
       );

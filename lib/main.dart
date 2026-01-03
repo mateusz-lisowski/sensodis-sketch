@@ -1,16 +1,26 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:sensodis_sketch/services/backup_service.dart';
+import 'package:sensodis_sketch/services/settings_service.dart';
+import 'package:sensodis_sketch/utils/http_overrides.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import 'database/app_database.dart';
 import 'dashboard/dashboard_page.dart';
 import 'messages.dart';
 import 'services/ble_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  HttpOverrides.global = MyHttpOverrides();
+
   // Initialize services
-  Get.put(BleService());
+  await Get.putAsync(() => SettingsService().init());
   Get.put(AppDatabase());
+  Get.put(BleService());
+  Get.put(BackupService());
 
   // Keep the screen on.
   WakelockPlus.enable();

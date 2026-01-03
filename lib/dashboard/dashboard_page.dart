@@ -285,9 +285,9 @@ class DashboardPage extends StatelessWidget {
                             children: [
                               Column(
                                 children: [
-                                  Icon(Icons.battery_std, color: SensorStatusColors.getBatteryColor(sensor.batteryLevel.value)),
+                                  Icon(Icons.battery_std, color: SensorStatusColors.getBatteryColor((sensor.batteryLevel.value / 5 * 100).round())),
                                   const SizedBox(height: 4),
-                                  Text('${sensor.batteryLevel.value}%', style: const TextStyle(fontSize: 12)),
+                                  Text('${(sensor.batteryLevel.value / 5 * 100).round()}%', style: const TextStyle(fontSize: 12)),
                                 ],
                               ),
                               const SizedBox(width: 16),

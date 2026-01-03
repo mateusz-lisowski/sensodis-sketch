@@ -6,49 +6,32 @@ import '../models/sensor.dart';
 class DetailsController extends GetxController {
   final Sensor sensor;
   final AppDatabase _database = Get.find<AppDatabase>();
-  
+
   final currentTab = 0.obs;
   final history = <MeasureEntity>[].obs;
-  final isLoading = true.obs;
-  
-  // Timer to periodically refresh history
-  Timer? _refreshTimer;
+
+  StreamSubscription<List<MeasureEntity>>? _historySubscription;
 
   DetailsController({required this.sensor});
 
   @override
   void onInit() {
     super.onInit();
-    fetchHistory();
-    // Refresh history every 5 seconds to show real-time updates
-    _refreshTimer = Timer.periodic(const Duration(seconds: 5), (_) => fetchHistory());
+    _historySubscription = _database.getSensorHistory(sensor.id).listen((data) {
+      history.assignAll(data);
+    });
   }
-  
+
   @override
   void onClose() {
-    _refreshTimer?.cancel();
+    _historySubscription?.cancel();
     super.onClose();
   }
 
   void changeTab(int index) {
     currentTab.value = index;
-    if (index == 1) {
-      fetchHistory();
-    }
   }
 
-  Future<void> fetchHistory() async {
-    // Don't show loading indicator on periodic refresh
-    if (history.isEmpty) isLoading.value = true;
-    
-    try {
-      final data = await _database.getSensorHistory(sensor.id);
-      history.assignAll(data);
-    } finally {
-      isLoading.value = false;
-    }
-  }
-  
   void toggleFavorite() {
     sensor.isFavorite.toggle();
   }

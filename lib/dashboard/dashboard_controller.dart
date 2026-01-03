@@ -1,12 +1,10 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as ble;
 import 'package:get/get.dart';
 import 'package:sensodis_sketch/utils/ble_decoder.dart';
 import '../models/sensor.dart';
 import '../services/ble_service.dart';
 import '../database/app_database.dart';
-import '../utils/dummy_sensors.dart';
 
 enum SensorFilter { all, favorites }
 enum SensorSort { none, favorites, temperatureAsc, temperatureDesc }
@@ -15,7 +13,7 @@ class DashboardController extends GetxController {
   final sensors = <Sensor>[].obs;
   final currentFilter = SensorFilter.all.obs;
   final currentSort = SensorSort.favorites.obs; // Default to favorites based on previous requirement, can be changed to none if desired
-  
+
   final BleService _bleService = Get.find<BleService>();
   final AppDatabase _database = Get.find<AppDatabase>();
 
@@ -50,14 +48,14 @@ class DashboardController extends GetxController {
           return a.name.value.compareTo(b.name.value);
       }
     });
-    
+
     return filtered;
   }
 
   void setFilter(SensorFilter filter) {
     currentFilter.value = filter;
   }
-  
+
   void setSort(SensorSort sort) {
     currentSort.value = sort;
   }
@@ -82,30 +80,17 @@ class DashboardController extends GetxController {
     sensors.clear();
     final savedSensors = await _database.getAllSensors();
 
-    if (savedSensors.isEmpty && kDebugMode) {
-      await _addDummySensors();
-    } else {
-      for (var s in savedSensors) {
-        sensors.add(Sensor(
-          id: s.id,
-          name: s.name,
-          temperature: s.temperature,
-          humidity: s.humidity,
-          batteryLevel: s.batteryLevel,
-          lastUpdated: s.lastUpdated,
-          rssi: s.rssi,
-          isFavorite: s.isFavorite,
-        ));
-      }
-    }
-  }
-
-  Future<void> _addDummySensors() async {
-    final dummySensors = getDummySensors();
-
-    for (var s in dummySensors) {
-      sensors.add(s);
-      _saveSensorAndMeasure(s);
+    for (var s in savedSensors) {
+      sensors.add(Sensor(
+        id: s.id,
+        name: s.name,
+        temperature: s.temperature,
+        humidity: s.humidity,
+        batteryLevel: s.batteryLevel,
+        lastUpdated: s.lastUpdated,
+        rssi: s.rssi,
+        isFavorite: s.isFavorite,
+      ));
     }
   }
 
@@ -128,12 +113,17 @@ class DashboardController extends GetxController {
         if (decodedData.humidity != null) {
           sensor.humidity.value = decodedData.humidity!;
         }
-        sensor.batteryLevel.value = (decodedData.batteryLevel / 5.0 * 100).round();
+        sensor.batteryLevel.value = decodedData.batteryLevel;
         sensor.lastUpdated.value = result.timeStamp;
         sensor.rssi.value = result.rssi;
 
         // Save to database
-        _saveSensorAndMeasure(sensor);
+        _saveSensorAndMeasure(
+          sensor,
+          result.advertisementData.manufacturerData.values.isNotEmpty
+              ? result.advertisementData.manufacturerData.values.first.map((e) => e.toRadixString(16).padLeft(2, '0')).join()
+              : '',
+        );
       }
     }
   }
@@ -161,11 +151,16 @@ class DashboardController extends GetxController {
       if (decodedData.humidity != null) {
         sensor.humidity.value = decodedData.humidity!;
       }
-      sensor.batteryLevel.value = (decodedData.batteryLevel / 5.0 * 100).round();
+      sensor.batteryLevel.value = decodedData.batteryLevel;
       sensor.lastUpdated.value = result.timeStamp;
       sensor.rssi.value = result.rssi;
 
-      _saveSensorAndMeasure(sensor);
+      _saveSensorAndMeasure(
+        sensor,
+        result.advertisementData.manufacturerData.values.isNotEmpty
+            ? result.advertisementData.manufacturerData.values.first.map((e) => e.toRadixString(16).padLeft(2, '0')).join()
+            : '',
+      );
     } else {
       // Add new sensor
       final newSensor = Sensor(
@@ -176,10 +171,15 @@ class DashboardController extends GetxController {
         batteryLevel: (decodedData.batteryLevel / 5.0 * 100).round(),
         lastUpdated: result.timeStamp,
         rssi: result.rssi,
-      );
+      ); 
 
       sensors.add(newSensor);
-      _saveSensorAndMeasure(newSensor);
+      _saveSensorAndMeasure(
+        newSensor,
+        result.advertisementData.manufacturerData.values.isNotEmpty
+            ? result.advertisementData.manufacturerData.values.first.map((e) => e.toRadixString(16).padLeft(2, '0')).join()
+            : '',
+      );
     }
   }
 
@@ -190,12 +190,12 @@ class DashboardController extends GetxController {
 
   void toggleFavorite(Sensor sensor) {
     sensor.isFavorite.toggle();
-    _saveSensorAndMeasure(sensor);
+    _saveSensorAndMeasure(sensor, '');
     // Force refresh the list to re-sort/filter
     sensors.refresh();
   }
 
-  void _saveSensorAndMeasure(Sensor sensor) {
+  void _saveSensorAndMeasure(Sensor sensor, String rawData) {
     // Save sensor to database
     _database.insertSensor(SensorEntity(
       id: sensor.id,
@@ -216,6 +216,7 @@ class DashboardController extends GetxController {
       sensor.batteryLevel.value,
       sensor.lastUpdated.value,
       sensor.rssi.value,
+      rawData,
     );
   }
 

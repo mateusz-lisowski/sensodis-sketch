@@ -31,14 +31,25 @@ class Measures extends Table {
   IntColumn get batteryLevel => integer()();
   DateTimeColumn get timestamp => dateTime()();
   IntColumn get rssi => integer()();
+  TextColumn get rawData => text()();
+  BoolColumn get backedUp => boolean().withDefault(const Constant(false))();
 }
 
-@DriftDatabase(tables: [Sensors, Measures])
+@DataClassName('BackupLogEntity')
+class BackupLogs extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get sensorId => text().references(Sensors, #id)();
+  DateTimeColumn get timestamp => dateTime()();
+  IntColumn get statusCode => integer()();
+  TextColumn get response => text()();
+}
+
+@DriftDatabase(tables: [Sensors, Measures, BackupLogs])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration {
@@ -53,6 +64,15 @@ class AppDatabase extends _$AppDatabase {
         if (from < 3) {
           await m.addColumn(sensors, sensors.isFavorite);
         }
+        if (from < 4) {
+          await m.addColumn(measures, measures.backedUp);
+        }
+        if (from < 5) {
+          await m.addColumn(measures, measures.rawData);
+        }
+        if (from < 6) {
+          await m.createTable(backupLogs);
+        }
       },
     );
   }
@@ -65,8 +85,13 @@ class AppDatabase extends _$AppDatabase {
     return select(sensors).get();
   }
 
+  Future<List<SensorEntity>> getFavoriteSensors() {
+    return (select(sensors)..where((t) => t.isFavorite.equals(true))).get();
+  }
+
   Future<void> deleteSensor(String id) {
     return transaction(() async {
+      await (delete(backupLogs)..where((t) => t.sensorId.equals(id))).go();
       await (delete(measures)..where((t) => t.sensorId.equals(id))).go();
       await (delete(sensors)..where((t) => t.id.equals(id))).go();
     });
@@ -79,6 +104,7 @@ class AppDatabase extends _$AppDatabase {
       int batteryLevel,
       DateTime timestamp,
       int rssi,
+      String rawData,
       ) {
     return transaction(() async {
       await into(measures).insert(MeasuresCompanion.insert(
@@ -88,13 +114,8 @@ class AppDatabase extends _$AppDatabase {
         batteryLevel: batteryLevel,
         timestamp: timestamp,
         rssi: rssi,
+        rawData: rawData,
       ));
-
-      // Check count and keep only last 100
-      // We want to keep the newest 100 records.
-      // DELETE FROM measures WHERE sensorId = ? AND id NOT IN (
-      //   SELECT id FROM measures WHERE sensorId = ? ORDER BY timestamp DESC LIMIT 100
-      // )
 
       final subquery = selectOnly(measures)
         ..addColumns([measures.id])
@@ -109,11 +130,49 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
-  Future<List<MeasureEntity>> getSensorHistory(String sensorId) {
+  Stream<List<MeasureEntity>> getSensorHistory(String sensorId) {
     return (select(measures)
       ..where((t) => t.sensorId.equals(sensorId))
-      ..orderBy(
-          [(t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc)]))
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc)
+      ]))
+        .watch();
+  }
+
+  Future<MeasureEntity?> getLastMeasureForSensor(String sensorId) {
+    return (select(measures)
+          ..where((t) => t.sensorId.equals(sensorId))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc)
+          ])
+          ..limit(1))
+        .getSingleOrNull();
+  }
+
+  Future<void> updateMeasureBackedUp(int measureId, bool backedUp) {
+    return (update(measures)..where((t) => t.id.equals(measureId)))
+        .write(MeasuresCompanion(backedUp: Value(backedUp)));
+  }
+
+  Future<int> addBackupLog(
+      {required String sensorId,
+      required DateTime timestamp,
+      required int statusCode,
+      required String response}) {
+    return into(backupLogs).insert(BackupLogsCompanion.insert(
+      sensorId: sensorId,
+      timestamp: timestamp,
+      statusCode: statusCode,
+      response: response,
+    ));
+  }
+
+  Future<List<BackupLogEntity>> getBackupLogs(String sensorId) {
+    return (select(backupLogs)
+      ..where((t) => t.sensorId.equals(sensorId))
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc)
+      ]))
         .get();
   }
 }
