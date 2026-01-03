@@ -17,7 +17,7 @@ void main() async {
   HttpOverrides.global = MyHttpOverrides();
 
   // Initialize services
-  await Get.putAsync(() => SettingsService().init());
+  await Get.put(SettingsService()).init();
   Get.put(AppDatabase());
   Get.put(BleService());
   Get.put(BackupService());
