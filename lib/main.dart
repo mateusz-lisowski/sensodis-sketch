@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:sensodis_sketch/services/backup_service.dart';
+import 'package:sensodis_sketch/services/network_service.dart';
 import 'package:sensodis_sketch/services/settings_service.dart';
 import 'package:sensodis_sketch/utils/http_overrides.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -21,6 +22,7 @@ void main() async {
   Get.put(AppDatabase());
   Get.put(BleService());
   Get.put(BackupService());
+  Get.put(NetworkService());
 
   // Keep the screen on.
   WakelockPlus.enable();

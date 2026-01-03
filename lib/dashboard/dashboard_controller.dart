@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as ble;
 import 'package:get/get.dart';
 import 'package:sensodis_sketch/utils/ble_decoder.dart';
+import 'package:sensodis_sketch/widgets/warning_snackbar.dart';
 import '../models/sensor.dart';
 import '../services/ble_service.dart';
 import '../database/app_database.dart';
@@ -132,7 +134,7 @@ class DashboardController extends GetxController {
     final decodedData = decodeTr4AdvertisingPacket(result.advertisementData);
 
     if (decodedData == null) {
-      Get.snackbar('Error', 'Could not read data from this device.');
+      showWarningSnackbar('Error', 'Could not read data from this device.');
       return;
     }
 
@@ -171,7 +173,7 @@ class DashboardController extends GetxController {
         batteryLevel: (decodedData.batteryLevel / 5.0 * 100).round(),
         lastUpdated: result.timeStamp,
         rssi: result.rssi,
-      ); 
+      );
 
       sensors.add(newSensor);
       _saveSensorAndMeasure(
