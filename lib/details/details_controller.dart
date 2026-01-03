@@ -9,8 +9,10 @@ class DetailsController extends GetxController {
 
   final currentTab = 0.obs;
   final history = <MeasureEntity>[].obs;
+  final backupLogs = <BackupLogEntity>[].obs;
 
   StreamSubscription<List<MeasureEntity>>? _historySubscription;
+  StreamSubscription<List<BackupLogEntity>>? _backupLogsSubscription;
 
   DetailsController({required this.sensor});
 
@@ -20,11 +22,15 @@ class DetailsController extends GetxController {
     _historySubscription = _database.getSensorHistory(sensor.id).listen((data) {
       history.assignAll(data);
     });
+    _backupLogsSubscription = _database.watchBackupLogs(sensor.id).listen((logs) {
+      backupLogs.assignAll(logs);
+    });
   }
 
   @override
   void onClose() {
     _historySubscription?.cancel();
+    _backupLogsSubscription?.cancel();
     super.onClose();
   }
 

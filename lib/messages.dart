@@ -53,6 +53,8 @@ class Messages extends Translations {
           'sort_favorites': 'Favorites',
           'sort_temp': 'Temperature',
           'search_by_name': 'Search by name',
+          'logs': 'Logs',
+          'no_logs': 'No logs available',
         },
         'pl_PL': {
           'hello': 'Witaj Świecie',
@@ -104,6 +106,8 @@ class Messages extends Translations {
           'sort_favorites': 'Ulubione',
           'sort_temp': 'Temperatura',
           'search_by_name': 'Szukaj po nazwie',
+          'logs': 'Logi',
+          'no_logs': 'Brak logów',
         }
       };
 }

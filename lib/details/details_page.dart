@@ -45,6 +45,10 @@ class DetailsPage extends StatelessWidget {
                 icon: const Icon(Icons.history),
                 label: 'history'.tr,
               ),
+              BottomNavigationBarItem(
+                icon: const Icon(Icons.receipt_long),
+                label: 'logs'.tr,
+              ),
             ],
           )),
     );
@@ -53,8 +57,10 @@ class DetailsPage extends StatelessWidget {
   Widget _buildBody(BuildContext context) {
     if (controller.currentTab.value == 0) {
       return _buildDetailsTab(context);
-    } else {
+    } else if (controller.currentTab.value == 1) {
       return _buildHistoryTab(context);
+    } else {
+      return _buildLogsTab(context);
     }
   }
 
@@ -119,6 +125,31 @@ class DetailsPage extends StatelessWidget {
                 Text('${(measure.batteryLevel / 5 * 100).round()}% Bat'),
               ],
             ),
+          );
+        },
+      );
+    });
+  }
+
+  Widget _buildLogsTab(BuildContext context) {
+    return Obx(() {
+      if (controller.backupLogs.isEmpty) {
+        return Center(child: Text('no_logs'.tr));
+      }
+
+      return ListView.separated(
+        padding: const EdgeInsets.all(16.0),
+        itemCount: controller.backupLogs.length,
+        separatorBuilder: (context, index) => const Divider(),
+        itemBuilder: (context, index) {
+          final log = controller.backupLogs[index];
+          return ListTile(
+            leading: Icon(Icons.receipt, color: Theme.of(context).colorScheme.primary),
+            title: Text(
+              '${log.statusCode} - ${log.response}',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            subtitle: Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(log.timestamp)),
           );
         },
       );

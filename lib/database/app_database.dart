@@ -175,6 +175,15 @@ class AppDatabase extends _$AppDatabase {
       ]))
         .get();
   }
+
+  Stream<List<BackupLogEntity>> watchBackupLogs(String sensorId) {
+    return (select(backupLogs)
+      ..where((t) => t.sensorId.equals(sensorId))
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc)
+      ]))
+        .watch();
+  }
 }
 
 LazyDatabase _openConnection() {
