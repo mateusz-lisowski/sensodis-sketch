@@ -41,7 +41,8 @@ class Messages extends Translations {
           'scanning_automatically': 'Scanning automatically...',
           'added': 'Added',
           'delete_sensor': 'Delete Sensor',
-          'delete_sensor_confirmation': 'Are you sure you want to delete @name? This will also erase all database data.',
+          'delete_sensor_confirmation':
+              'Are you sure you want to delete @name? This will also erase all database data.',
           'cancel': 'Cancel',
           'delete': 'Delete',
           'show_all': 'Show All',
@@ -55,6 +56,12 @@ class Messages extends Translations {
           'search_by_name': 'Search by name',
           'logs': 'Logs',
           'no_logs': 'No logs available',
+          'backup_settings': 'Backup Settings',
+          'endpoint_url': 'Endpoint URL',
+          'backup_interval': 'Backup Interval',
+          'backup_interval_minutes': '@count minutes',
+          'backup_favorites_only': 'Backup Favorites Only',
+          'save': 'Save',
         },
         'pl_PL': {
           'hello': 'Witaj Świecie',
@@ -94,7 +101,8 @@ class Messages extends Translations {
           'scanning_automatically': 'Skanowanie automatyczne...',
           'added': 'Dodano',
           'delete_sensor': 'Usuń czujnik',
-          'delete_sensor_confirmation': 'Czy na pewno chcesz usunąć @name? To usunie również wszystkie dane z bazy.',
+          'delete_sensor_confirmation':
+              'Czy na pewno chcesz usunąć @name? To usunie również wszystkie dane z bazy.',
           'cancel': 'Anuluj',
           'delete': 'Usuń',
           'show_all': 'Pokaż wszystkie',
@@ -108,6 +116,12 @@ class Messages extends Translations {
           'search_by_name': 'Szukaj po nazwie',
           'logs': 'Logi',
           'no_logs': 'Brak logów',
+          'backup_settings': 'Ustawienia kopii zapasowej',
+          'endpoint_url': 'Adres URL punktu końcowego',
+          'backup_interval': 'Interwał kopii zapasowej',
+          'backup_interval_minutes': '@count minut',
+          'backup_favorites_only': 'Archiwizuj tylko ulubione',
+          'save': 'Zapisz',
         }
       };
 }

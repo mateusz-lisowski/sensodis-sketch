@@ -26,22 +26,24 @@ class SettingsPage extends StatelessWidget {
           const Divider(),
           Padding(
             padding: const EdgeInsets.all(16.0),
-            child: Text('Backup Settings', style: Theme.of(context).textTheme.titleLarge),
+            child: Text('backup_settings'.tr, style: Theme.of(context).textTheme.titleLarge),
           ),
           ListTile(
             leading: const Icon(Icons.cloud_upload),
-            title: const Text('Endpoint URL'),
+            title: Text('endpoint_url'.tr),
             subtitle: Obx(() => Text(settingsService.endpointUrl.value)),
             onTap: () => _showEndpointDialog(context, settingsService),
           ),
           ListTile(
             leading: const Icon(Icons.timer),
-            title: const Text('Backup Interval'),
-            subtitle: Obx(() => Text('${settingsService.backupInterval.value} minutes')),
+            title: Text('backup_interval'.tr),
+            subtitle: Obx(() => Text('backup_interval_minutes'.trParams({
+                  'count': settingsService.backupInterval.value.toString(),
+                }))),
             onTap: () => _showIntervalDialog(context, settingsService),
           ),
           Obx(() => SwitchListTile(
-            title: const Text('Backup Favorites Only'),
+            title: Text('backup_favorites_only'.tr),
             value: settingsService.backupFavoritesOnly.value,
             onChanged: (value) {
               settingsService.setBackupFavoritesOnly(value);
@@ -83,21 +85,21 @@ class SettingsPage extends StatelessWidget {
     final controller = TextEditingController(text: settingsService.endpointUrl.value);
     Get.dialog(
       AlertDialog(
-        title: const Text('Endpoint URL'),
+        title: Text('endpoint_url'.tr),
         content: TextField(
           controller: controller,
         ),
         actions: [
           TextButton(
             onPressed: () => Get.back(),
-            child: const Text('Cancel'),
+            child: Text('cancel'.tr),
           ),
           TextButton(
             onPressed: () {
               settingsService.setEndpointUrl(controller.text);
               Get.back();
             },
-            child: const Text('Save'),
+            child: Text('save'.tr),
           ),
         ],
       ),
@@ -108,12 +110,14 @@ class SettingsPage extends StatelessWidget {
     final intervals = [1, 5, 10, 15, 30, 60];
     Get.dialog(
       AlertDialog(
-        title: const Text('Backup Interval'),
+        title: Text('backup_interval'.tr),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: intervals
               .map((interval) => ListTile(
-                    title: Text('$interval minutes'),
+                    title: Text('backup_interval_minutes'.trParams({
+                      'count': interval.toString(),
+                    })),
                     onTap: () {
                       settingsService.setBackupInterval(interval);
                       Get.back();
