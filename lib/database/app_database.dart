@@ -6,43 +6,9 @@ import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
 part 'app_database.g.dart';
-
-@DataClassName('SensorEntity')
-class Sensors extends Table {
-  TextColumn get id => text()();
-  TextColumn get name => text()();
-  RealColumn get temperature => real()();
-  RealColumn get humidity => real().nullable()();
-  IntColumn get batteryLevel => integer()();
-  DateTimeColumn get lastUpdated => dateTime()();
-  IntColumn get rssi => integer()();
-  BoolColumn get isFavorite => boolean().withDefault(const Constant(false))();
-
-  @override
-  Set<Column> get primaryKey => {id};
-}
-
-@DataClassName('MeasureEntity')
-class Measures extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  TextColumn get sensorId => text().references(Sensors, #id)();
-  RealColumn get temperature => real()();
-  RealColumn get humidity => real().nullable()();
-  IntColumn get batteryLevel => integer()();
-  DateTimeColumn get timestamp => dateTime()();
-  IntColumn get rssi => integer()();
-  TextColumn get rawData => text()();
-  BoolColumn get backedUp => boolean().withDefault(const Constant(false))();
-}
-
-@DataClassName('BackupLogEntity')
-class BackupLogs extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  TextColumn get sensorId => text().references(Sensors, #id)();
-  DateTimeColumn get timestamp => dateTime()();
-  IntColumn get statusCode => integer()();
-  TextColumn get response => text()();
-}
+part 'tables/sensors.dart';
+part 'tables/measures.dart';
+part 'tables/backup_logs.dart';
 
 @DriftDatabase(tables: [Sensors, Measures, BackupLogs])
 class AppDatabase extends _$AppDatabase {
