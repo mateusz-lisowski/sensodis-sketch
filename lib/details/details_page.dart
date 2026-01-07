@@ -146,7 +146,7 @@ class DetailsPage extends StatelessWidget {
           return ListTile(
             leading: Icon(Icons.receipt, color: Theme.of(context).colorScheme.primary),
             title: Text(
-              '${sensor.name} - ${log.statusCode} - ${log.response}',
+              '${log.statusCode} - ${log.response}',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(log.timestamp)),
