@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart' as ble;
 import 'package:get/get.dart';
 import 'package:sensodis_sketch/utils/ble_decoder.dart';
@@ -46,8 +45,7 @@ class DashboardController extends GetxController {
           // Sort by temperature descending (hottest first)
           return b.temperature.value.compareTo(a.temperature.value);
         case SensorSort.none:
-        default:
-          return a.name.value.compareTo(b.name.value);
+        return a.name.value.compareTo(b.name.value);
       }
     });
 
