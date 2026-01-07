@@ -168,7 +168,7 @@ class DashboardController extends GetxController {
         name: deviceName,
         temperature: decodedData.temperature,
         humidity: decodedData.humidity,
-        batteryLevel: (decodedData.batteryLevel / 5.0 * 100).round(),
+        batteryLevel: decodedData.batteryLevel,
         lastUpdated: result.timeStamp,
         rssi: result.rssi,
       );
