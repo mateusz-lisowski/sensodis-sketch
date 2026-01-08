@@ -62,6 +62,7 @@ class Messages extends Translations {
           'backup_interval_minutes': '@count minutes',
           'backup_favorites_only': 'Backup Favorites Only',
           'save': 'Save',
+          'app_version': 'App Version',
         },
         'pl_PL': {
           'hello': 'Witaj Świecie',
@@ -122,6 +123,7 @@ class Messages extends Translations {
           'backup_interval_minutes': '@count minut',
           'backup_favorites_only': 'Archiwizuj tylko ulubione',
           'save': 'Zapisz',
+          'app_version': 'Wersja aplikacji',
         }
       };
 }

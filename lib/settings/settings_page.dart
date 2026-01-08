@@ -49,6 +49,12 @@ class SettingsPage extends StatelessWidget {
               settingsService.setBackupFavoritesOnly(value);
             },
           )),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: Text('app_version'.tr),
+            subtitle: Obx(() => Text(settingsService.appVersion.value)),
+          ),
         ],
       ),
     );

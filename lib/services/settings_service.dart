@@ -1,5 +1,6 @@
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class SettingsService extends GetxService {
   late SharedPreferences _prefs;
@@ -13,10 +14,12 @@ class SettingsService extends GetxService {
   final endpointUrl = ''.obs;
   final backupInterval = 1.obs; // in minutes
   final backupFavoritesOnly = false.obs;
+  final appVersion = ''.obs;
 
   Future<SettingsService> init() async {
     _prefs = await SharedPreferences.getInstance();
     _loadSettings();
+    await _loadAppVersion();
     return this;
   }
 
@@ -24,6 +27,11 @@ class SettingsService extends GetxService {
     endpointUrl.value = _prefs.getString(keyEndpointUrl) ?? endpointUrl.value;
     backupInterval.value = _prefs.getInt(keyBackupInterval) ?? backupInterval.value;
     backupFavoritesOnly.value = _prefs.getBool(keyBackupFavoritesOnly) ?? backupFavoritesOnly.value;
+  }
+
+  Future<void> _loadAppVersion() async {
+    final PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    appVersion.value = packageInfo.version;
   }
 
   void setEndpointUrl(String url) {

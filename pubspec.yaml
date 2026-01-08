@@ -39,6 +39,7 @@ dependencies:
   http: ^1.2.1
   shared_preferences: ^2.2.3
   connectivity_plus: ^6.0.3
+  package_info_plus: ^8.0.0
 
   # Drift dependencies
   drift: ^2.16.0
