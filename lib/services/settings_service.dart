@@ -10,7 +10,7 @@ class SettingsService extends GetxService {
   static const String keyBackupFavoritesOnly = 'backupFavoritesOnly';
 
   // Reactive properties with default values
-  final endpointUrl = 'https://test.sensodis.com/app/service/bluetooth/'.obs;
+  final endpointUrl = ''.obs;
   final backupInterval = 1.obs; // in minutes
   final backupFavoritesOnly = false.obs;
 
