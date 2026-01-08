@@ -115,6 +115,28 @@ class AppDatabase extends _$AppDatabase {
         .getSingleOrNull();
   }
 
+  /// Paginated history fetch for lazy loading
+  Future<List<MeasureEntity>> getSensorHistoryPage(String sensorId, {int limit = 50, int offset = 0}) {
+    return (select(measures)
+      ..where((t) => t.sensorId.equals(sensorId))
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc)
+      ])
+      ..limit(limit, offset: offset))
+        .get();
+  }
+
+  /// Stream of the latest measure (limit 1) so UI can prepend newly inserted measures
+  Stream<MeasureEntity?> watchLatestMeasureForSensor(String sensorId) {
+    return (select(measures)
+      ..where((t) => t.sensorId.equals(sensorId))
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc)
+      ])
+      ..limit(1))
+        .watchSingleOrNull();
+  }
+
   Future<void> updateMeasureBackedUp(int measureId, bool backedUp) {
     return (update(measures)..where((t) => t.id.equals(measureId)))
         .write(MeasuresCompanion(backedUp: Value(backedUp)));
@@ -149,6 +171,28 @@ class AppDatabase extends _$AppDatabase {
         (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc)
       ]))
         .watch();
+  }
+
+  /// Paginated backup logs fetch for lazy loading
+  Future<List<BackupLogEntity>> getBackupLogsPage(String sensorId, {int limit = 50, int offset = 0}) {
+    return (select(backupLogs)
+      ..where((t) => t.sensorId.equals(sensorId))
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc)
+      ])
+      ..limit(limit, offset: offset))
+        .get();
+  }
+
+  /// Stream of the latest backup log (limit 1) so UI can prepend newly inserted logs
+  Stream<BackupLogEntity?> watchLatestBackupLogForSensor(String sensorId) {
+    return (select(backupLogs)
+      ..where((t) => t.sensorId.equals(sensorId))
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc)
+      ])
+      ..limit(1))
+        .watchSingleOrNull();
   }
 }
 

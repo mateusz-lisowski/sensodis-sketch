@@ -99,59 +99,101 @@ class DetailsPage extends StatelessWidget {
 
   Widget _buildHistoryTab(BuildContext context) {
     return Obx(() {
+      if (controller.history.isEmpty && controller.isLoadingHistory.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
       if (controller.history.isEmpty) {
         return Center(child: Text('no_history'.tr));
       }
 
-      return ListView.separated(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: controller.history.length,
-        separatorBuilder: (context, index) => const Divider(),
-        itemBuilder: (context, index) {
-          final measure = controller.history[index];
-          return ListTile(
-            leading: Icon(Icons.history, color: Theme.of(context).colorScheme.primary),
-            title: Text(
-              '${measure.temperature}°C${measure.humidity != null ? ' | ${measure.humidity}%' : ''}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(measure.timestamp)),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (measure.backedUp)
-                  Icon(Icons.check_circle, color: Colors.green, size: 16),
-                SizedBox(width: 8),
-                Text('${(measure.batteryLevel / 5 * 100).round()}% Bat'),
-              ],
-            ),
-          );
+      return NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (notification.metrics.extentAfter < 300 &&
+              !controller.isLoadingHistory.value &&
+              controller.hasMoreHistory.value) {
+            controller.loadMoreHistory();
+          }
+          return false;
         },
+        child: ListView.separated(
+          padding: const EdgeInsets.all(16.0),
+          itemCount: controller.history.length + (controller.hasMoreHistory.value ? 1 : 0),
+          separatorBuilder: (context, index) => const Divider(),
+          itemBuilder: (context, index) {
+            if (index >= controller.history.length) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final measure = controller.history[index];
+            return ListTile(
+              leading: Icon(Icons.history, color: Theme.of(context).colorScheme.primary),
+              title: Text(
+                '${measure.temperature}°C${measure.humidity != null ? ' | ${measure.humidity}%' : ''}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(measure.timestamp)),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (measure.backedUp)
+                    Icon(Icons.check_circle, color: Colors.green, size: 16),
+                  SizedBox(width: 8),
+                  Text('${(measure.batteryLevel / 5 * 100).round()}% Bat'),
+                ],
+              ),
+            );
+          },
+        ),
       );
     });
   }
 
   Widget _buildLogsTab(BuildContext context) {
     return Obx(() {
+      if (controller.backupLogs.isEmpty && controller.isLoadingLogs.value) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
       if (controller.backupLogs.isEmpty) {
         return Center(child: Text('no_logs'.tr));
       }
 
-      return ListView.separated(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: controller.backupLogs.length,
-        separatorBuilder: (context, index) => const Divider(),
-        itemBuilder: (context, index) {
-          final log = controller.backupLogs[index];
-          return ListTile(
-            leading: Icon(Icons.receipt, color: Theme.of(context).colorScheme.primary),
-            title: Text(
-              '${log.statusCode} - ${log.response}',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(log.timestamp)),
-          );
+      return NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          if (notification.metrics.extentAfter < 300 &&
+              !controller.isLoadingLogs.value &&
+              controller.hasMoreLogs.value) {
+            controller.loadMoreLogs();
+          }
+          return false;
         },
+        child: ListView.separated(
+          padding: const EdgeInsets.all(16.0),
+          itemCount: controller.backupLogs.length + (controller.hasMoreLogs.value ? 1 : 0),
+          separatorBuilder: (context, index) => const Divider(),
+          itemBuilder: (context, index) {
+            if (index >= controller.backupLogs.length) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16.0),
+                child: Center(child: CircularProgressIndicator()),
+              );
+            }
+
+            final log = controller.backupLogs[index];
+            return ListTile(
+              leading: Icon(Icons.receipt, color: Theme.of(context).colorScheme.primary),
+              title: Text(
+                '${log.statusCode} - ${log.response}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text(DateFormat('yyyy-MM-dd HH:mm:ss').format(log.timestamp)),
+            );
+          },
+        ),
       );
     });
   }
