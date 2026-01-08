@@ -29,6 +29,10 @@ class DetailsController extends GetxController {
   StreamSubscription<MeasureEntity?>? _latestMeasureSubscription;
   StreamSubscription<BackupLogEntity?>? _latestLogSubscription;
 
+  // Subscriptions for pages so updates (like backedUp flag changes) reflect in-place
+  StreamSubscription<List<MeasureEntity>>? _historyPageSubscription;
+  StreamSubscription<List<BackupLogEntity>>? _logsPageSubscription;
+
   DetailsController({required this.sensor});
 
   @override
@@ -67,6 +71,8 @@ class DetailsController extends GetxController {
   void onClose() {
     _latestMeasureSubscription?.cancel();
     _latestLogSubscription?.cancel();
+    _historyPageSubscription?.cancel();
+    _logsPageSubscription?.cancel();
     super.onClose();
   }
 
@@ -79,6 +85,44 @@ class DetailsController extends GetxController {
       _logsInitialized = true;
       loadInitialLogs();
     }
+  }
+
+  void _resubscribeHistoryPage() {
+    _historyPageSubscription?.cancel();
+    final limit = history.isNotEmpty ? history.length : pageSize;
+    _historyPageSubscription = _database.watchSensorHistoryPage(sensor.id, limit: limit).listen((page) {
+      for (var m in page) {
+        final idx = history.indexWhere((h) => h.id == m.id);
+        if (idx >= 0) {
+          // replace existing item to reflect updates (e.g., backedUp changes)
+          history[idx] = m;
+        } else {
+          // If item is not present, insert it at the correct position
+          final insertAt = page.indexOf(m);
+          if (insertAt <= history.length) {
+            history.insert(insertAt, m);
+          }
+        }
+      }
+    });
+  }
+
+  void _resubscribeLogsPage() {
+    _logsPageSubscription?.cancel();
+    final limit = backupLogs.isNotEmpty ? backupLogs.length : pageSize;
+    _logsPageSubscription = _database.watchBackupLogsPage(sensor.id, limit: limit).listen((page) {
+      for (var l in page) {
+        final idx = backupLogs.indexWhere((b) => b.id == l.id);
+        if (idx >= 0) {
+          backupLogs[idx] = l;
+        } else {
+          final insertAt = page.indexOf(l);
+          if (insertAt <= backupLogs.length) {
+            backupLogs.insert(insertAt, l);
+          }
+        }
+      }
+    });
   }
 
   void toggleFavorite() {
@@ -111,6 +155,10 @@ class DetailsController extends GetxController {
       }
     }
 
+    // Subscribe to a watch window that covers all currently loaded history items so
+    // updates (for example, the backedUp flag) are reflected in the list in-place
+    _resubscribeHistoryPage();
+
     isLoadingHistory.value = false;
   }
 
@@ -139,6 +187,10 @@ class DetailsController extends GetxController {
         _logsPage++;
       }
     }
+
+    // Subscribe to a watch window that covers all currently loaded logs so updates
+    // to existing items are reflected in the list in-place
+    _resubscribeLogsPage();
 
     isLoadingLogs.value = false;
   }

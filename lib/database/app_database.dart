@@ -137,6 +137,17 @@ class AppDatabase extends _$AppDatabase {
         .watchSingleOrNull();
   }
 
+  /// Watch a page/window of measures so UI can reflect updates to existing measures
+  Stream<List<MeasureEntity>> watchSensorHistoryPage(String sensorId, {int limit = 50, int offset = 0}) {
+    return (select(measures)
+      ..where((t) => t.sensorId.equals(sensorId))
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc)
+      ])
+      ..limit(limit, offset: offset))
+        .watch();
+  }
+
   Future<void> updateMeasureBackedUp(int measureId, bool backedUp) {
     return (update(measures)..where((t) => t.id.equals(measureId)))
         .write(MeasuresCompanion(backedUp: Value(backedUp)));
@@ -193,6 +204,17 @@ class AppDatabase extends _$AppDatabase {
       ])
       ..limit(1))
         .watchSingleOrNull();
+  }
+
+  /// Watch a page/window of backup logs so UI can reflect updates to existing logs
+  Stream<List<BackupLogEntity>> watchBackupLogsPage(String sensorId, {int limit = 50, int offset = 0}) {
+    return (select(backupLogs)
+      ..where((t) => t.sensorId.equals(sensorId))
+      ..orderBy([
+        (t) => OrderingTerm(expression: t.timestamp, mode: OrderingMode.desc)
+      ])
+      ..limit(limit, offset: offset))
+        .watch();
   }
 }
 
